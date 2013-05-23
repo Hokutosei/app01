@@ -2,7 +2,7 @@
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" ng-app> <!--<![endif]-->
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -25,6 +25,50 @@
 
 <!-- Add your site or application content here -->
 <p>Hello world! This is HTML5 Boilerplate.</p>
+
+
+<div class="container-fluid">
+
+    <div class="row-fluid">
+        <div class="span10 offset3 main_wrapper">
+            <div class="row-fluid">
+                <div class="span4">
+                    <ul class="form_registration">
+                        <li>
+                            <div class="row-fluid">
+                                <div class="span3">Name</div><input type="text" class="span9" ng-model="nameField">
+                            </div>
+                        </li>
+                        <li>
+                            <div class="row-fluid">
+                                <div class="span3">Job Title</div><input type="text" class="span9" ng-model="jobTitle">
+                            </div>
+                        </li>
+
+                    </ul>
+
+                </div>
+                <div class="span4 right_stage">
+                    <div class="row-fluid span6 user_stage_header">
+                        <div class="span2">
+                            myLogo
+                        </div>
+                        <div class="span7 short_name_title">
+                            <p>{{nameField}}</p>
+                            <p>{{jobTitle}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+
+
+
 
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
