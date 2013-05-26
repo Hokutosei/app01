@@ -1,8 +1,5 @@
 <!DOCTYPE html>
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" ng-app> <!--<![endif]-->
+<html ng-app="jpWorkerCard" xmlns:ng="http://angularjs.org">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -18,7 +15,7 @@
     <script type="text/javascript" src="js/less-1.3.3.min.js"></script>
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
 </head>
-<body>
+<body ng-controller='AppCtrl'>
 
 <div class="navbar navbar-fixed-top">
     <div class="navbar-inner">
@@ -32,7 +29,7 @@
             </a>
 
             <!-- Be sure to leave the brand out there if you want it shown -->
-            <a class="brand" href="#">Project name</a>
+            <a class="brand" href="#">Project name</a><span><button class="btn btn-small" ng-click="flushDb()">flushdb</span>
 
             <!-- Everything you want hidden at 940px or less, place within here -->
             <div class="nav-collapse collapse">
@@ -60,8 +57,14 @@
                                 <div class="span3">Job Title</div><input type="text" class="span9" ng-model="jobTitle">
                             </div>
                         </li>
+                        <li>
+                            <div class="row-fluid">
+                                <div class="span3">Job Description</div><textarea rows="3" ng-model="jobDescription"></textarea>
+                            </div>
+                        </li>
 
                     </ul>
+                    <button class="btn btn-small pull-right" ng-click="submitRegistration()">submit</button>
 
                 </div>
                 <div class="span4 right_stage">
@@ -75,6 +78,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="span3">
+                    <ul>
+                        <li ng-repeat="user in userLists">{{user}}</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
@@ -85,10 +93,10 @@
 
 
 
-
+<script src="js/angular.js"></script>
+<script src="js/jp_angular.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
-<script src="js/angular.js"></script>
 
 <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
 <script>
