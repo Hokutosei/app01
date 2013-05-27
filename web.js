@@ -37,91 +37,31 @@ io.sockets.on('connection', function(socket) {
     });
 
     socket.on('userRegistration', function(data) {
-        var dataObjects = [];
-
-        var startExecution = new Date();
-//        client.multi().get('users', function(err, usersCount) {
-//            console.log('Current user count ' + usersCount);
-//            client.lpush('users:id', usersCount);
-//            for(key in data) {
-//                client.lrange('users:id', 0, -1, function(err, users_id) {
-//                    var searchTime = new Date()
-//                    for(var i = 0; i < users_id.length; i++) {
-//                        client.hget(['users:' + users_id[i], 'name'], function(err, userName) {
-//                            if (userName == data['name']) {
-//                                console.log('took ' + (new Date - searchTime) + ' ms');
-//                            } else if (data[key] != '' && data['name'] != ''&& userName != data['name']) {
-//                                console.log('not found')
-//                                client.hset(['users:' + usersCount, key, data[key]], redis.print);
-//                                client.hset(['users:' + usersCount, 'id', usersCount], redis.print)
-//                                client.incrby('users', 1, function(err, userIncr) {
-//                                    console.log('User is incr '+ userIncr)
-//                                })
-//
-//                            }
-////                            else if (data[key] != '' && data['name'] != '') {
-////                                client.hset(['users:' + usersCount, key, data[key]], redis.print);
-////                                client.hset(['users:' + usersCount, 'id', usersCount], redis.print)
-////                                client.incrby('users', 1, redis.print)
-////                            }
-//
-//                        })
-//                    }
-//                })
-////                if (data[key] != '') {
-////                    client.hset(['users:' + usersCount, key, data[key]], redis.print);
-////                    client.hset(['users:' + usersCount, 'id', usersCount], redis.print)
-////                }
-//            }
-////        }).incrby('users', 1).exec();
-//        }).exec();
-
-
-        client.get('users', function(err, userCount) {
-            console.log(data['name'])
-            client.lpush(queryConstruct('users', 'id'), userCount)
-            client.lrange(queryConstruct('users', 'id'), 0, -1, redis.print)
-
-            client.lrange('users:id', 0, -1, function(err, users_id) {
-                for(var i = 0; i < users_id.length; i++) {
-                    client.hget([queryConstruct('users', users_id[i]), 'name'], function(err, userName) {
-                        console.log(userName)
-                        if (userName != data['name']) {
-                            var array = [], c = 0
-                            for(key in data) {
-                                if (key != '') {
-                                    array.push(key + ' ' + data[key])
-                                    c++
-                                }
-                                if (c == objectLengthCount(data)) {
-                                    console.log(array.join(', '))
-                                    client.hmset(queryConstruct('users', 'id'), array.join(', '), redis.print)
-                                    return false
-                                }
-                            }
-                            return false
-                        }
+        client.lrange(queryConstruct('users', 'id'), 0, -1, function(err, usersId) {
+            for(var i = 0, c = 1, keyFound = []; i < usersId.length; i++) {
+                client.hget([queryConstruct('users', usersId[i]), 'name'], function(err, user) {
+                    if (user == data['name']) { keyFound.push(1) }
+                    if (c == usersId.length ) { evalUsers(keyFound) }
+                    c++
+                })
+            }
+            function evalUsers(obj) {
+                console.log(arrayHasValue(obj, 1))
+                if (arrayHasValue(keyFound, 1)) {
+                    client.get('users', function(err, userCount) {
+                        createOrUpdateUser(data, userCount)
+                        // return user
+                    })
+                } else {
+                    client.get(queryConstruct('users'), function(err, userCount) {
+                        createOrUpdateUser(data, userCount)
+                        //return user
+                        client.lpush(queryConstruct('users', 'id'), userCount)
+                        client.incr(queryConstruct('users'))
+                        client.lrange(queryConstruct('users', 'id'), 0, -1, redis.print)
                     })
                 }
-            });
-
-        })
-
-        client.multi().lrange('users:id', 0, -1, function(err, reply) {
-                var seen = 0;
-                for(var i = 1; i < reply.length; i++) {
-                    client.hgetall('users:' + i, function(err, hgetallReply) {
-                        dataObjects.push(hgetallReply);
-                        seen++;
-                        if (seen == reply.length -1) {
-                            socket.emit('users_list', {data: dataObjects})
-                        }
-                    });
-                }
-            }).exec(function(err, reply) {
-                var endTime = new Date() - startExecution + 'ms';
-                if (err) { console.log('there is something wrong with your queries')}
-                else { console.log('executed in ' + endTime)}
+            }
         });
     })
 
@@ -145,6 +85,31 @@ function queryConstruct() {
 function objectLengthCount(obj) {
     return Object.keys(obj).length
 }
+
+function returnResult(obj) {
+    var o = obj.toString()
+    return o
+}
+
+function arrayHasValue(arr, val) {
+    if (arr.length != 0) { for(var i = 0;i < arr.length; i++) { return !!(arr[i] == val) } }
+}
+
+
+/*
+    BASIC CRUD METHODS
+
+ */
+
+function createOrUpdateUser(arr, userCount) {
+    for(key in arr) {
+        if(arr[key] != '') {
+            client.hset([queryConstruct('users', userCount), key, arr[key]], redis.print)
+        }
+    }
+}
+
+
 var port = process.env.PORT || 4000;
 server.listen(port, function() {
     console.log('Listening on ' + port)
