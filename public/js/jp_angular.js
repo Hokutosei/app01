@@ -6,7 +6,8 @@ var app = angular.module('jpWorkerCard', []);
 
 app.factory('socket', function($rootScope) {
     //var socket = io.connect('http://localhost:8888');
-    var socket = io.connect('http://localhost:5000');
+//    var socket = io.connect('http://localhost:5000');
+    var socket = io.connect();
     return {
         on: function (eventName, callback) {
             socket.on(eventName, function() {
