@@ -4,7 +4,9 @@
   "dependencies": {
     "express": "3.1.x",
     "redis" : "0.8.x",
-    "socket.io" : "0.9.x"
+    "socket.io" : "0.9.x",
+    "redis-cluster" : "0.0.x",
+    "assert": "0.4.x"
   },
   "engines": {
     "node": "0.10.x",

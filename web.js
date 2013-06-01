@@ -12,6 +12,9 @@ var redis = require('redis'),
 //    });
 
     client = redis.createClient(6379, '10.0.1.2', {no_ready_check: true});
+    redisClusters = {
+        1: { }
+    }
 
 
 var cluster = require('cluster');
@@ -59,6 +62,9 @@ io.sockets.on('connection', function(socket) {
     });
 
     socket.on('userRegistration', function(data) {
+        var keysCount = countObjectKeys(data)
+        console.log(keysCount)
+
         client.lrange(query('users', 'id'), 0, -1, function(err, usersId) {
              var keyFound = [];
             if (usersId.length != 0) {
@@ -73,12 +79,13 @@ io.sockets.on('connection', function(socket) {
             function evalUsers(obj) {
                 if (arrayHasValue(keyFound, 1)) {
                     client.get(query('users'), function(err, userCount) {
-                        createOrUpdateUser(data, userCount);
+                        createOrUpdateUser(data, userCount, keysCount);
                         // return user
                     })
                 } else {
                     client.get(query('users'), function(err, userCount) {
-                        createOrUpdateUser(data, userCount);
+                        createOrUpdateUser(data, userCount, keysCount);
+
                         //return user
                         var updatingListsAndUsers = new Date();
                         client.multi().lpush(query('users', 'id'), userCount)
@@ -92,7 +99,7 @@ io.sockets.on('connection', function(socket) {
                                     var start = new Date()
                                     for(var i =0; i < usersId.length; i++) {
                                         client.hgetall(query('users', usersId[i]), function(err, user) {
-                                            console.log(user)
+                                            //console.log(user)
                                             if (i == usersId.length - 1) {
                                                 console.log('Pushed all in ' + (new Date() - start) + ' ms')
                                             }
@@ -136,36 +143,56 @@ function arrayHasValue(arr, val) {
     if (arr.length != 0) { for(var i = 0;i < arr.length; i++) { return !!(arr[i] == val) } }
 }
 
+function findUserById(data) {
+    client.lrange(query('users', 'id'), function(err, usersId) {
+        for(var i = 0, c = 1; i < usersId.length; i++) {
+            client.hget([query('users', usersId[i]), 'name'], function(err, user) {
+                if (user == data['name']) {
+                    client.hgetall(query('users', usersId[i]), function(err, thisUser) {
+                        console.log(thisUser);
+                    })
+                }
+                c++
+            })
+        }
+    })
+}
+
+function countObjectKeys(arr) {
+    var counter = 0;
+    for(keys in arr) { if (arr[keys] != '') { counter++;} }
+    return counter
+}
 
 /*
     BASIC CRUD METHODS
 
  */
 
-function createOrUpdateUser(arr, userCount) {
-    var counter = 0;
-    var arrLength = {
-        size: function() {
-            var i = 0;
-            for(key in arr) {
-                if (arr[key] != '') { counter++ }
-            }
-            return i
-        }
-    };
+function createOrUpdateUser(arr, userId, objectCount) {
+    //console.log(countObjectKeys().size(objectCount))
+    console.log('this object count' + objectCount)
     for(key in arr) {
-        var aCounter = 1;
+        var aCounter = 0;
         if(arr[key] != '') {
             var start = new Date()
-            client.hset([query('users', userCount), key, arr[key]], function(err, reply) {
+            client.hset([query('users', userId), key, arr[key]], function(err, reply) {
                 console.log('Reply ' + reply + ' : ' + (new Date() - start) + ' ms')
+                console.log('my counter ' + aCounter)
                 aCounter++;
-                console.log(aCounter)
-                console.log(arrLength.size())
+                if(aCounter == objectCount) {
+                    client.hgetall(query('users', userId), function(err, thisUser) {
+                        console.log(thisUser);
+                        io.sockets.emit('myCurrentUser', {data: thisUser, id: userId})
+                    })
+                }
             })
+
         }
     }
 }
+
+
 
 
 var port = process.env.PORT || 4000;

@@ -67,4 +67,12 @@ app.controller('AppCtrl', function($scope, socket) {
         console.log(data)
     })
 
+    socket.on('myCurrentUser', function(data) {
+        console.log(data)
+    })
+
+    $(function() {
+        $('#tabs').tabs();
+    })
+
 })
