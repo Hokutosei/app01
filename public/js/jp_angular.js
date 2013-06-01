@@ -6,7 +6,7 @@ var app = angular.module('jpWorkerCard', []);
 
 app.factory('socket', function($rootScope) {
     //var socket = io.connect('http://localhost:8888');
-    var socket = io.connect('http://localhost:4000');
+    var socket = io.connect('http://localhost:5000');
     return {
         on: function (eventName, callback) {
             socket.on(eventName, function() {
@@ -61,5 +61,9 @@ app.controller('AppCtrl', function($scope, socket) {
             }
         }
     }
+
+    socket.on('userHsetData', function(data) {
+        console.log(data)
+    })
 
 })

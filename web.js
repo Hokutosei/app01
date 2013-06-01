@@ -4,14 +4,36 @@ var app = require('express')(),
 
 
 var redis = require('redis'),
-    client = redis.createClient(14396, 'pub-redis-14396.us-east-1-3.2.ec2.garantiadata.com');
-    client.auth('jinpol', function(err, res) {
-        if (err) {
-            console.log('auth error ' + err)
-        } else { console.log('authorized..') }
-    });
+//    client = redis.createClient(14396, 'pub-redis-14396.us-east-1-3.2.ec2.garantiadata.com');
+//    client.auth('jinpol', function(err, res) {
+//        if (err) {
+//            console.log('auth error ' + err)
+//        } else { console.log('authorized..') }
+//    });
 
-//    client = redis.createClient()
+    client = redis.createClient(6379, '10.0.1.2', {no_ready_check: true});
+
+
+var cluster = require('cluster');
+cluster.setupMaster({
+    exec    : 'worker.js',
+    args    : ['--use', 'http'],
+    silent  : false
+});
+cluster.fork();
+
+var numCPUs = require('os').cpus().length;
+if (cluster.isMaster) {
+    // Fork workers.
+    for (var i = 0; i < numCPUs; i++) {
+        cluster.fork();
+    }
+
+    cluster.on('exit', function(worker, code, signal) {
+        console.log('worker ' + worker.process.pid + ' died');
+    });
+}
+
 
 app.get(/^(.+)$/, function(req, res) {
     res.sendfile('public/' + req.params[0]);
@@ -121,11 +143,25 @@ function arrayHasValue(arr, val) {
  */
 
 function createOrUpdateUser(arr, userCount) {
+    var counter = 0;
+    var arrLength = {
+        size: function() {
+            var i = 0;
+            for(key in arr) {
+                if (arr[key] != '') { counter++ }
+            }
+            return i
+        }
+    };
     for(key in arr) {
+        var aCounter = 1;
         if(arr[key] != '') {
             var start = new Date()
             client.hset([query('users', userCount), key, arr[key]], function(err, reply) {
                 console.log('Reply ' + reply + ' : ' + (new Date() - start) + ' ms')
+                aCounter++;
+                console.log(aCounter)
+                console.log(arrLength.size())
             })
         }
     }
