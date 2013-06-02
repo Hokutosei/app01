@@ -2,8 +2,10 @@ var app = require('express')(),
     server = require('http').createServer(app),
     io = require('socket.io').listen(server);
 
+var globalIp = '126.15.226.61' || '10.0.1.2';
 
-var redis = require('redis'),
+
+var redis = require('redis');
 //    client = redis.createClient(14396, 'pub-redis-14396.us-east-1-3.2.ec2.garantiadata.com');
 //    client.auth('jinpol', function(err, res) {
 //        if (err) {
@@ -11,31 +13,18 @@ var redis = require('redis'),
 //        } else { console.log('authorized..') }
 //    });
 
-    client = redis.createClient(6379, '10.0.1.2', {no_ready_check: true});
-    redisClusters = {
-        1: { }
-    }
+    client = redis.createClient(6379, globalIp, {no_ready_check: true});
+    var sclient = function() {
+        var hosts = ['10.0.1.2', '10.0.1.3'];
+        for(var i = 0; i < hosts.length; i++) {
+            //redis.createClient(6379, hosts[i], {no_ready_check: true})
+            console.log(hosts[i].toString())
+        }
 
+    };
 
-var cluster = require('cluster');
-cluster.setupMaster({
-    exec    : 'worker.js',
-    args    : ['--use', 'http'],
-    silent  : false
-});
-cluster.fork();
+sclient();
 
-var numCPUs = require('os').cpus().length;
-if (cluster.isMaster) {
-    // Fork workers.
-    for (var i = 0; i < numCPUs; i++) {
-        cluster.fork();
-    }
-
-    cluster.on('exit', function(worker, code, signal) {
-        console.log('worker ' + worker.process.pid + ' died');
-    });
-}
 
 
 app.get(/^(.+)$/, function(req, res) {
