@@ -87,7 +87,12 @@ io.sockets.on('connection', function(socket) {
                                         dataCounter++;
                                         if(countObjectKeys(data) == dataCounter) {
                                             console.log('hset took ' + (new Date() - startTime) + ' ms');
-                                            console.log('called once')
+
+                                            //after setting a user, return it to the logged in user
+                                            // make some validation here buy getting the registered user socket
+                                            client.hgetall(query(users, usersReplyToId), function(err, hgetallReply) {
+                                                socket.emit('thisUserData', { data: hgetallReply})
+                                            })
                                             client.multi().lpush(query(users, 'id'), usersReplyToId)
                                                 .incr(query(users))
                                                 .exec(redis.print)
