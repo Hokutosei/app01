@@ -33,6 +33,8 @@ app.get(/^(.+)$/, function(req, res) {
 
 initializeUsers();
 
+var users = 'users';
+
 io.sockets.on('connection', function(socket) {
     socket.emit('helloServer', { message: 'hello socket'});
     socket.on('testing', function(data) {
@@ -41,8 +43,10 @@ io.sockets.on('connection', function(socket) {
 
     //client.flushdb(redis.print)
     socket.on('flushDb', function() {
-        client.flushdb(redis.print);
-        initializeUsers()
+        client.flushdb(function(err, flushDbReply) {
+            console.log(flushDbReply)
+            initializeUsers()
+        });
     });
 
     client.llen('users:id', function(err, reply) {
@@ -52,62 +56,116 @@ io.sockets.on('connection', function(socket) {
 
     socket.on('userRegistration', function(data) {
         var keysCount = countObjectKeys(data)
-        console.log(keysCount)
+
+        client.lrange(query(users, 'id'), 0, -1, function(err, usersId) {
+            if(usersId.length == 0) {
+                client.multi().set(query(users), 0, redis.print)
+                    .lpush(query(users, 'id'), 0, redis.print)
+                    .exec(redis.print)
+            }
+        })
+
 
         client.lrange(query('users', 'id'), 0, -1, function(err, usersId) {
-             var keyFound = [];
-            if (usersId.length != 0) {
-                for(var i = 0, c = 1; i < usersId.length; i++) {
-                    client.hget([query('users', usersId[i]), 'name'], function(err, user) {
-                        if (user == data['name']) { keyFound.push(1) }
-                        if (c == usersId.length || usersId == null ) { evalUsers(keyFound) }
-                        c++
-                    })
-                }
-            } else { evalUsers(keyFound, 1) }
-            function evalUsers(obj) {
-                if (arrayHasValue(keyFound, 1)) {
-                    client.get(query('users'), function(err, userCount) {
-                        createOrUpdateUser(data, userCount, keysCount);
-                        // return user
-                    })
-                } else {
-                    client.get(query('users'), function(err, userCount) {
-                        createOrUpdateUser(data, userCount, keysCount);
+            var validationArray = [];
+            for(var i = 0, counter = 0; i < usersId.length; i++) {
+                client.hget(query('users', usersId[i]), 'name', function(err, usersIdReply) {
 
-                        //return user
-                        var updatingListsAndUsers = new Date();
-                        client.multi().lpush(query('users', 'id'), userCount)
-                            .incr(query('users'), redis.print)
-                            .lrange(query('users', 'id'), 0, -1, redis.print)
-                            .exec(function(err, reply) {
-                                console.log('Finish in ' + (new Date - updatingListsAndUsers) + ' ms')
+                    if(usersIdReply == data['name']) {
+                        var msg = 'username is not available';
+                        console.log(msg)
+                        validationArray.push(1)
+                    } else if((counter == (usersId.length -1)) && arrayHasValue(validationArray, 1) != true) {
+                        console.log('save this user');
+                        client.get(query(users), function(err, usersReplyToId) {
+                            console.log(usersReplyToId)
+                            var dataCounter = 0, startTime = new Date();
+                            data['id'] = usersReplyToId;
+                            for(keys in data) {
+                                if(data[keys] != '') {
+                                    client.hset(query(users, usersReplyToId), keys, data[keys], function(err, hsetReply) {
+                                        dataCounter++;
+                                        if(countObjectKeys(data) == dataCounter) {
+                                            console.log('hset took ' + (new Date() - startTime) + ' ms');
+                                            console.log('called once')
+                                            client.multi().lpush(query(users, 'id'), usersReplyToId)
+                                                .incr(query(users))
+                                                .exec(redis.print)
+                                        }
+                                    })
+                                }
+                            }
 
-                                // benchmark here, dump all data
-                                client.lrange(query('users', 'id'), 0, -1, function(err, usersId) {
-                                    var start = new Date()
-                                    for(var i =0; i < usersId.length; i++) {
-                                        client.hgetall(query('users', usersId[i]), function(err, user) {
-                                            //console.log(user)
-                                            if (i == usersId.length - 1) {
-                                                console.log('Pushed all in ' + (new Date() - start) + ' ms')
-                                            }
-
-                                        })
-                                    }
-                                })
-                            })
-                    })
-                }
+                        })
+                    }
+                    counter++;
+                })
             }
         });
+
+
+
+//        client.lrange(query('users', 'id'), 0, -1, function(err, usersId) {
+//             var keyFound = [];
+//            if (usersId.length != 0) {
+//                for(var i = 0, c = 1; i < usersId.length; i++) {
+//                    client.hget([query('users', usersId[i]), 'name'], function(err, user) {
+//                        if (user == data['name']) { keyFound.push(1) }
+//                        if (c == usersId.length || usersId == null ) { evalUsers(keyFound) }
+//                        c++
+//                    })
+//                }
+//            } else { evalUsers(keyFound, 1) }
+//            function evalUsers(obj) {
+//                if (arrayHasValue(keyFound, 1)) {
+//                    client.get(query('users'), function(err, userCount) {
+//                        createOrUpdateUser(data, userCount, keysCount);
+//                        // return user
+//                    })
+//                } else {
+//                    client.get(query('users'), function(err, userCount) {
+//                        createOrUpdateUser(data, userCount, keysCount);
+//
+//                        //return user
+//                        var updatingListsAndUsers = new Date();
+//                        client.multi().lpush(query('users', 'id'), userCount)
+//                            .incr(query('users'), redis.print)
+//                            .lrange(query('users', 'id'), 0, -1, redis.print)
+//                            .exec(function(err, reply) {
+//                                console.log('Finish in ' + (new Date - updatingListsAndUsers) + ' ms')
+//
+//                                // benchmark here, dump all data
+//                                client.lrange(query('users', 'id'), 0, -1, function(err, usersId) {
+//                                    var start = new Date()
+//                                    for(var i =0; i < usersId.length; i++) {
+//                                        client.hgetall(query('users', usersId[i]), function(err, user) {
+//                                            //console.log(user)
+//                                            if (i == usersId.length - 1) {
+//                                                console.log('Pushed all in ' + (new Date() - start) + ' ms')
+//                                            }
+//
+//                                        })
+//                                    }
+//                                })
+//                            })
+//                    })
+//                }
+//            }
+//        });
     })
 })
 
 function initializeUsers() {
     client.get(query('users'), function(err, reply) {
         if (reply == null) {
-            client.set(query('users'), '0', redis.print)
+//            client.set(query('users'), '0', function(err, setReply) {
+//                console.log('this set reply ' + setReply)
+//                client.get(query('users'), function(err, userReply) {
+//                    client.lpush(query('users', 'id'), userReply, function(err, lpushReply) {
+//                        console.log(lpushReply)
+//                    })
+//                })
+//            })
         }
         console.log(reply)
     });
