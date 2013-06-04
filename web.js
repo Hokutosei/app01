@@ -38,8 +38,11 @@ var users = 'users';
 
 (function() {
     function pingRedis() {
+        var start = new Date()
         client.lrange(query(users, 'id'), 0, -1, function(err, lrangeReply) {
-            io.sockets.emit('lrangeReply', {data: lrangeReply})
+            var resTime = (new Date() - start) + ' ms' ;
+            console.log(resTime)
+            io.sockets.emit('lrangeReply', { data: lrangeReply, response: resTime})
         })
 
         setTimeout(pingRedis, 10000)
