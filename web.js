@@ -35,6 +35,18 @@ initializeUsers();
 
 var users = 'users';
 
+
+(function() {
+    function pingRedis() {
+        client.lrange(query(users, 'id'), 0, -1, function(err, lrangeReply) {
+            io.sockets.emit('lrangeReply', {data: lrangeReply})
+        })
+
+        setTimeout(pingRedis, 10000)
+    }
+    pingRedis()
+})();
+
 io.sockets.on('connection', function(socket) {
     socket.emit('helloServer', { message: 'hello socket'});
     socket.on('testing', function(data) {
