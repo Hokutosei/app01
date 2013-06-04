@@ -79,4 +79,8 @@ app.controller('AppCtrl', function($scope, socket) {
         console.log(data)
     })
 
+    socket.on('lrangeReply', function(data) {
+        console.log(data)
+    })
+
 })
