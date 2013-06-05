@@ -47,7 +47,7 @@
         <div class="span10 offset2 main_wrapper">
             <div class="row-fluid">
                 <div class="span4">
-                    <div id="tabs">
+                    <div id="tabs" class="registration_login">
                         <ul>
                             <li> <a href="#tabs-1">Register</a> </li>
                             <li> <a href="#tabs-2"> Login</a> </li>
@@ -74,6 +74,7 @@
                             </ul>
                             <button class="btn btn-small pull-right" ng-click="submitRegistration()">submit</button>
                             <br class="clearfix"/>
+                            <p>{{userNotAvailable}}</p>
 
                         </div>
                         <div id="tabs-2">

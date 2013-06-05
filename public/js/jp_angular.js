@@ -77,10 +77,19 @@ app.controller('AppCtrl', function($scope, socket) {
 
     socket.on('thisUserData', function(data) {
         console.log(data)
+        $scope.userNotAvailable = ''
+        if(data) {
+            //make a transition here after registration
+            //$('.registration_login').hide()
+        }
     })
 
     socket.on('lrangeReply', function(data) {
         console.log(data)
     })
+
+    socket.on('userNotAvailable', function(data) {
+       $scope.userNotAvailable = data.data
+    });
 
 })

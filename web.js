@@ -56,6 +56,8 @@ io.sockets.on('connection', function(socket) {
         console.log(data)
     });
 
+    console.log(socket.id)
+
     //client.flushdb(redis.print)
     socket.on('flushDb', function() {
         client.flushdb(function(err, flushDbReply) {
@@ -88,6 +90,7 @@ io.sockets.on('connection', function(socket) {
 
                     if(usersIdReply == data['name']) {
                         var msg = 'username is not available';
+                        socket.emit('userNotAvailable', { data: 'user name is not available'});
                         console.log(msg)
                         validationArray.push(1)
                     } else if((counter == (usersId.length -1)) && arrayHasValue(validationArray, 1) != true) {
@@ -95,7 +98,7 @@ io.sockets.on('connection', function(socket) {
                         client.get(query(users), function(err, usersReplyToId) {
                             console.log(usersReplyToId)
                             var dataCounter = 0, startTime = new Date();
-                            data['id'] = usersReplyToId;
+                            data['id'] = usersReplyToId, data['socketId'] = socket.id;
                             for(keys in data) {
                                 if(data[keys] != '') {
                                     client.hset(query(users, usersReplyToId), keys, data[keys], function(err, hsetReply) {
