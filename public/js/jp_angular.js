@@ -38,8 +38,20 @@ app.controller('AppCtrl', function($scope, socket) {
         console.log(data.message)
     })
     socket.emit('testing', {message: 'test'})
-    $scope.submitRegistration = function() {
-        socket.emit('userRegistration', {name: $scope.nameField, job_title: $scope.jobTitle, job_description: $scope.jobDescription})
+    $scope.submitUserReg = function() {
+        //console.log($scope.user['name'])
+        var testField = ['name', 'password', 'email'], errorArray = [], errorMsg = [];
+        $.each(testField, function(k, val) {
+            console.log($scope.user == undefined)
+            console.log($scope.user == '')
+            console.log($scope.user['name'] == '')
+            //console.log($scope.user[val] == undefined)
+        })
+//        console.log(errorArray)
+        if(errorArray.length != 0) {
+            console.log(errorArray)
+        }
+        //socket.emit('userRegistration', userData )
     }
 
     $scope.flushDb = function() {
@@ -54,7 +66,6 @@ app.controller('AppCtrl', function($scope, socket) {
         //console.log(data);
         console.log(objects.data.length)
         console.log($scope.userLists.length)
-        //if ($scope.userLists.length < objects.data.length) { $scope.userLists = [] }
         for(var i = 0; i < objects.data.length; i++) {
             if (objects.data[i].name != undefined) {
                 //console.log(objects.data[i].name)
@@ -91,5 +102,9 @@ app.controller('AppCtrl', function($scope, socket) {
     socket.on('userNotAvailable', function(data) {
        $scope.userNotAvailable = data.data
     });
+
+    socket.on('inforReply', function(data) {
+        console.log(data.data)
+    })
 
 })

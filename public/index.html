@@ -54,27 +54,39 @@
                         </ul>
                         <div class="tabs-spacer"></div>
                         <div id="tabs-1">
-                            <ul class="form_registration">
-                                <li>
-                                    <div class="row-fluid">
-                                        <div class="span3">Name</div><input type="text" class="span9" ng-model="nameField">
+                            <form class="form-horizontal jp_new_form">
+                                <div class="control-group">
+                                    <label class="control-label">nameField</label>
+                                    <div class="controls">
+                                        <input type="text" id="inputNameField" placeholder="Username" ng-model="user.name">
                                     </div>
-                                </li>
-                                <li>
-                                    <div class="row-fluid">
-                                        <div class="span3">Job Title</div><input type="text" class="span9" ng-model="jobTitle">
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="row-fluid">
-                                        <div class="span3">Job Description</div><textarea rows="3" ng-model="jobDescription"></textarea>
-                                    </div>
-                                </li>
+                                </div>
 
-                            </ul>
-                            <button class="btn btn-small pull-right" ng-click="submitRegistration()">submit</button>
+                                <div class="control-group">
+                                    <label class="control-label">Email</label>
+                                    <div class="controls">
+                                        <input type="text" id="inputEmailField" placeholder="Email" ng-model="user.email">
+                                    </div>
+                                </div>
+
+                                <div class="control-group">
+                                    <label class="control-label">Password</label>
+                                    <div class="controls">
+                                        <input type="password" id="password" placeholder="Password" ng-model="user.password">
+                                    </div>
+                                </div>
+
+                                <div class="control-group">
+                                    <div class="controls">
+                                        <button type="submit" class="btn" ng-click="submitUserReg()">Register</button>
+                                    </div>
+                                </div>
+
+                            </form>
+
                             <br class="clearfix"/>
                             <p>{{userNotAvailable}}</p>
+                            <p>{{registerErrorMsg}}</p>
 
                         </div>
                         <div id="tabs-2">

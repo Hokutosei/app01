@@ -44,10 +44,18 @@ var users = 'users';
             console.log(resTime)
             io.sockets.emit('lrangeReply', { data: lrangeReply, response: resTime})
         })
-
         setTimeout(pingRedis, 10000)
     }
+
+    function getInfo() {
+        client.info(function(err, infoReply) {
+            io.sockets.emit('inforReply', { data: parseInfo(infoReply) })
+        })
+        setTimeout(getInfo, 30000)
+    }
+
     pingRedis()
+    getInfo()
 })();
 
 io.sockets.on('connection', function(socket) {
@@ -125,56 +133,6 @@ io.sockets.on('connection', function(socket) {
                 })
             }
         });
-
-
-
-//        client.lrange(query('users', 'id'), 0, -1, function(err, usersId) {
-//             var keyFound = [];
-//            if (usersId.length != 0) {
-//                for(var i = 0, c = 1; i < usersId.length; i++) {
-//                    client.hget([query('users', usersId[i]), 'name'], function(err, user) {
-//                        if (user == data['name']) { keyFound.push(1) }
-//                        if (c == usersId.length || usersId == null ) { evalUsers(keyFound) }
-//                        c++
-//                    })
-//                }
-//            } else { evalUsers(keyFound, 1) }
-//            function evalUsers(obj) {
-//                if (arrayHasValue(keyFound, 1)) {
-//                    client.get(query('users'), function(err, userCount) {
-//                        createOrUpdateUser(data, userCount, keysCount);
-//                        // return user
-//                    })
-//                } else {
-//                    client.get(query('users'), function(err, userCount) {
-//                        createOrUpdateUser(data, userCount, keysCount);
-//
-//                        //return user
-//                        var updatingListsAndUsers = new Date();
-//                        client.multi().lpush(query('users', 'id'), userCount)
-//                            .incr(query('users'), redis.print)
-//                            .lrange(query('users', 'id'), 0, -1, redis.print)
-//                            .exec(function(err, reply) {
-//                                console.log('Finish in ' + (new Date - updatingListsAndUsers) + ' ms')
-//
-//                                // benchmark here, dump all data
-//                                client.lrange(query('users', 'id'), 0, -1, function(err, usersId) {
-//                                    var start = new Date()
-//                                    for(var i =0; i < usersId.length; i++) {
-//                                        client.hgetall(query('users', usersId[i]), function(err, user) {
-//                                            //console.log(user)
-//                                            if (i == usersId.length - 1) {
-//                                                console.log('Pushed all in ' + (new Date() - start) + ' ms')
-//                                            }
-//
-//                                        })
-//                                    }
-//                                })
-//                            })
-//                    })
-//                }
-//            }
-//        });
     })
 })
 
@@ -234,6 +192,23 @@ function countObjectKeys(arr) {
     return counter
 }
 
+function parseInfo( info ) {
+    var lines = info.split( "\r\n" );
+    var obj = { };
+    for ( var i = 0, l = info.length; i < l; i++ ) {
+        var line = lines[ i ];
+        if ( line && line.split ) {
+            line = line.split( ":" );
+            if ( line.length > 1 ) {
+                var key = line.shift( );
+                obj[ key ] = line.join( ":" );
+            }
+        }
+    }
+    return obj;
+}
+
+
 /*
     BASIC CRUD METHODS
 
@@ -267,6 +242,8 @@ function createOrUpdateUser(arr, userId, objectCount) {
 
 var port = process.env.PORT || 4000;
 server.listen(port, function() {
-    console.log('Listening on ' + port)
+    console.log('Listening on ' + port + ' and redis port to ' + globalIp)
 
 })
+
+
