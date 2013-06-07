@@ -58,11 +58,35 @@ var users = 'users';
     getInfo()
 })();
 
+(function() {
+    function checkLoggedInUsers() {
+        client.lrange(query(users, 'logged.in'), 0, -1, function(err, lrangeReply) {
+            console.log(lrangeReply == '')
+            if(lrangeReply != '') {
+                for(var i = 0; i < lrangeReply.length; i++) {
+                    client.hget(query(users, lrangeReply[i]), 'name', function(err, hgetReply) {
+                        console.log(hgetReply)
+                    })
+                }
+            }
+        })
+    }
+    setTimeout(checkLoggedInUsers, 2000)
+    checkLoggedInUsers();
+})();
+
+
+
 io.sockets.on('connection', function(socket) {
     socket.emit('helloServer', { message: 'hello socket'});
     socket.on('testing', function(data) {
         console.log(data)
     });
+
+    socket.on('disconnect', function() {
+        io.sockets.emit('user_disconnected',{ message: socket.id})
+    })
+
 
     console.log(socket.id)
 
@@ -89,8 +113,6 @@ io.sockets.on('connection', function(socket) {
                     .exec(redis.print)
             }
         })
-
-
         client.lrange(query('users', 'id'), 0, -1, function(err, usersId) {
             var validationArray = [];
             for(var i = 0, counter = 0; i < usersId.length; i++) {
@@ -117,6 +139,7 @@ io.sockets.on('connection', function(socket) {
                                             //after setting a user, return it to the logged in user
                                             // make some validation here buy getting the registered user socket
                                             client.hgetall(query(users, usersReplyToId), function(err, hgetallReply) {
+                                                client.lpush(query(users, 'logged.in'), usersReplyToId)
                                                 socket.emit('thisUserData', { data: hgetallReply})
                                             })
                                             client.multi().lpush(query(users, 'id'), usersReplyToId)
@@ -215,12 +238,11 @@ function parseInfo( info ) {
  */
 
 function createOrUpdateUser(arr, userId, objectCount) {
-    //console.log(countObjectKeys().size(objectCount))
-    console.log('this object count' + objectCount)
+    console.log('this object count' + objectCount);
     for(key in arr) {
         var aCounter = 0;
         if(arr[key] != '') {
-            var start = new Date()
+            var start = new Date();
             client.hset([query('users', userId), key, arr[key]], function(err, reply) {
                 console.log('Reply ' + reply + ' : ' + (new Date() - start) + ' ms')
                 console.log('my counter ' + aCounter)
@@ -244,6 +266,6 @@ var port = process.env.PORT || 4000;
 server.listen(port, function() {
     console.log('Listening on ' + port + ' and redis port to ' + globalIp)
 
-})
+});
 
 

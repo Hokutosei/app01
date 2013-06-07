@@ -40,11 +40,10 @@ app.controller('AppCtrl', function($scope, socket) {
     socket.emit('testing', {message: 'test'})
     $scope.submitUserReg = function() {
         //console.log($scope.user['name'])
+        $scope.user;
         var testField = ['name', 'password', 'email'], errorArray = [], errorMsg = [];
         $.each(testField, function(k, val) {
-            console.log($scope.user == undefined)
-            console.log($scope.user == '')
-            console.log($scope.user['name'] == '')
+            console.log($scope.user.length);
             //console.log($scope.user[val] == undefined)
         })
 //        console.log(errorArray)
@@ -104,7 +103,16 @@ app.controller('AppCtrl', function($scope, socket) {
     });
 
     socket.on('inforReply', function(data) {
-        console.log(data.data)
+//        console.log(data.data)
+        $scope.serverData = []
+        $.each(data.data, function(k, val) {
+//            console.log(k + ' : ' + val)
+            $scope.serverData.push(k + ' : ' + val)
+        })
+    });
+
+    socket.on('user_disconnected', function(data) {
+        console.log(data)
     })
 
 })
