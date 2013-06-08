@@ -41,15 +41,7 @@ app.controller('AppCtrl', function($scope, socket) {
     $scope.submitUserReg = function() {
         //console.log($scope.user['name'])
         $scope.user;
-        var testField = ['name', 'password', 'email'], errorArray = [], errorMsg = [];
-        $.each(testField, function(k, val) {
-            console.log($scope.user.length);
-            //console.log($scope.user[val] == undefined)
-        })
-//        console.log(errorArray)
-        if(errorArray.length != 0) {
-            console.log(errorArray)
-        }
+        socket.emit('userRegistration', $scope.user)
         //socket.emit('userRegistration', userData )
     }
 
