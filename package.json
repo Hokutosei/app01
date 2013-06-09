@@ -6,7 +6,14 @@
     "redis" : "0.8.x",
     "socket.io" : "0.9.x",
     "redis-cluster" : "0.0.x",
-    "assert": "0.4.x"
+    "assert": "0.4.x",
+    "passport": "0.1.x",
+    "connect-ensure-login": "0.1.x",
+    "passport-local": "0.1.x",
+    "connect-redis": "1.4.x",
+    "passport.socket.io": "0.0.x",
+    "cookie": "x",
+    "connect": "x"
   },
   "engines": {
     "node": "0.10.x",

@@ -31,6 +31,7 @@ app.factory('socket', function($rootScope) {
 });
 
 app.controller('AppCtrl', function($scope, socket) {
+    $scope.user = '';
 
     //socket.emit('connection');
     socket.emit('connection')
@@ -40,10 +41,15 @@ app.controller('AppCtrl', function($scope, socket) {
     socket.emit('testing', {message: 'test'})
     $scope.submitUserReg = function() {
         //console.log($scope.user['name'])
-        $scope.user;
-        socket.emit('userRegistration', $scope.user)
+
+        socket.emit('userRegistration', $scope.user);
         //socket.emit('userRegistration', userData )
     }
+
+    $scope.login = function() {
+        socket.emit('login', $scope.user)
+    }
+
 
     $scope.flushDb = function() {
         socket.emit('flushDb')

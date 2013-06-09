@@ -81,7 +81,6 @@
                                         <button type="submit" class="btn" ng-click="submitUserReg()" ng-disabled="!registration_form.$valid">Register</button>
                                     </div>
                                 </div>
-
                             </form>
 
                             <br class="clearfix"/>
@@ -91,19 +90,27 @@
 
                         </div>
                         <div id="tabs-2">
-                            <ul class="form_registration">
-                                <li>
-                                    <div class="row-fluid">
-                                        <div class="span3">username</div><input type="text" class="span9" ng-model="username">
+                            <form class="form-horizontal jp_new_form" name="login_form">
+                                <div class="control-group">
+                                    <label class="control-label">nameField</label>
+                                    <div class="controls">
+                                        <input type="text" id="loginNameField" placeholder="Username" ng-model="user.name" required>
                                     </div>
-                                </li>
-                                <li>
-                                    <div class="row-fluid">
-                                        <div class="span3">password</div><input type="text" class="span9" ng-model="password">
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Password</label>
+                                    <div class="controls">
+                                        <input type="password" id="loginPassword" placeholder="Password" ng-model="user.password" required>
                                     </div>
-                                </li>
-                            </ul>
-                            <button class="btn btn-small pull-right" ng-click="submitRegistration()">submit</button>
+                                </div>
+
+                                <div class="control-group">
+                                    <div class="controls">
+                                        <button type="submit" class="btn" ng-click="login()" ng-disabled="!login_form.$valid">Login</button>
+                                    </div>
+                                </div>
+                            </form>
+
                             <br class="clearfix"/>
                         </div>
                     </div>

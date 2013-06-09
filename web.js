@@ -2,40 +2,54 @@ var app = require('express')(),
     server = require('http').createServer(app),
     io = require('socket.io').listen(server);
 
+
 var globalIp = '126.15.226.61' || '10.0.1.2';
-
-
 var redis = require('redis');
-//    client = redis.createClient(14396, 'pub-redis-14396.us-east-1-3.2.ec2.garantiadata.com');
-//    client.auth('jinpol', function(err, res) {
-//        if (err) {
-//            console.log('auth error ' + err)
-//        } else { console.log('authorized..') }
-//    });
-
     client = redis.createClient(6379, globalIp, {no_ready_check: true});
-    var sclient = function() {
-        var hosts = ['10.0.1.2', '10.0.1.3'];
-        for(var i = 0; i < hosts.length; i++) {
-            //redis.createClient(6379, hosts[i], {no_ready_check: true})
-            console.log(hosts[i].toString())
-        }
 
-    };
+var express = require('express'),
+    cookie = require('cookie'),
+    connect = require('connect')
 
-sclient();
-
+app.configure(function() {
+    app.use(express.cookieParser());
+    app.use(express.session({secret: 'session', key: 'express.sid'}));
+})
 
 
 app.get(/^(.+)$/, function(req, res) {
     res.sendfile('public/' + req.params[0]);
 });
 
+io.set('authorization', function(handshakeData, accept) {
+    console.log(handshakeData.headers.cookie)
+//    if(handshakeData.headers.cookie) {
+//        handshakeData.cookie = cookie.parse(handshakeData.headers.cookie);
+//        handshakeData.sessionID = connect.utils.
+//    }
+
+    if (handshakeData.headers.cookie) {
+
+        handshakeData.cookie = cookie.parse(handshakeData.headers.cookie);
+
+        handshakeData.sessionID = connect.utils.parseSignedCookie(handshakeData.cookie['express.sid'], 'secret');
+
+        if (handshakeData.cookie['express.sid'] == handshakeData.sessionID) {
+            return accept('Cookie is invalid.', false);
+        }
+
+    } else {
+        return accept('No cookie transmitted.', false);
+    }
+
+    accept(null, true);
+    console.log(handshakeData)
+})
+
+
 initializeUsers();
 
 var users = 'users';
-
-
 (function() {
     function pingRedis() {
         var start = new Date()
@@ -76,7 +90,6 @@ var users = 'users';
 })();
 
 
-
 io.sockets.on('connection', function(socket) {
     socket.emit('helloServer', { message: 'hello socket'});
     socket.on('testing', function(data) {
@@ -85,10 +98,10 @@ io.sockets.on('connection', function(socket) {
 
     socket.on('disconnect', function() {
         io.sockets.emit('user_disconnected',{ message: socket.id})
-    })
+    });
 
-
-    console.log(socket.id)
+    console.log('===================');
+    console.log('your socket id ' + socket.id)
 
     //client.flushdb(redis.print)
     socket.on('flushDb', function() {
