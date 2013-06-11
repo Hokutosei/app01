@@ -21,6 +21,7 @@ app.get(/^(.+)$/, function(req, res) {
     res.sendfile('public/' + req.params[0]);
 });
 
+var myCookie;
 io.set('authorization', function(handshakeData, accept) {
     console.log(handshakeData.headers.cookie)
 //    if(handshakeData.headers.cookie) {
@@ -43,10 +44,11 @@ io.set('authorization', function(handshakeData, accept) {
     }
 
     accept(null, true);
-    console.log(handshakeData)
+    console.log('my cookie ' + handshakeData.cookie['express.sid'])
+    myCookie = handshakeData.cookie['express.sid']
 })
 
-
+console.log('this cookie ' + myCookie)
 initializeUsers();
 
 var users = 'users';
@@ -99,6 +101,8 @@ io.sockets.on('connection', function(socket) {
     socket.on('disconnect', function() {
         io.sockets.emit('user_disconnected',{ message: socket.id})
     });
+    //console.log(socket.handshake.foo = 'testing')
+    //console.log(handshakeData)
 
     console.log('===================');
     console.log('your socket id ' + socket.id)

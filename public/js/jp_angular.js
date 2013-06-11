@@ -113,4 +113,8 @@ app.controller('AppCtrl', function($scope, socket) {
         console.log(data)
     })
 
+    socket.on('testCookie', function(data) {
+        console.log(data.cookie)
+    })
+
 })
