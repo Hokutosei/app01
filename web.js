@@ -5,7 +5,7 @@ var app = require('express')(),
 
 var globalIp = '126.15.226.61' || '10.0.1.2';
 var redis = require('redis');
-    client = redis.createClient(6379, globalIp, {no_ready_check: true});
+    client = redis.createClient(6379, globalIp, {no_ready_check: true, parser: 'hiredis'});
 
 var express = require('express'),
     cookie = require('cookie'),
@@ -21,34 +21,15 @@ app.get(/^(.+)$/, function(req, res) {
     res.sendfile('public/' + req.params[0]);
 });
 
-var myCookie;
-io.set('authorization', function(handshakeData, accept) {
-    console.log(handshakeData.headers.cookie)
-//    if(handshakeData.headers.cookie) {
-//        handshakeData.cookie = cookie.parse(handshakeData.headers.cookie);
-//        handshakeData.sessionID = connect.utils.
-//    }
 
-    if (handshakeData.headers.cookie) {
+io.configure(function (){
+    io.set('authorization', function (handshakeData, callback) {
+        //console.log(handshakeData.headers.cookie)
+        handshakeData.cookie = cookie.parse(handshakeData.headers.cookie)
+        callback(null, true); // error first callback style
+    });
+});
 
-        handshakeData.cookie = cookie.parse(handshakeData.headers.cookie);
-
-        handshakeData.sessionID = connect.utils.parseSignedCookie(handshakeData.cookie['express.sid'], 'secret');
-
-        if (handshakeData.cookie['express.sid'] == handshakeData.sessionID) {
-            return accept('Cookie is invalid.', false);
-        }
-
-    } else {
-        return accept('No cookie transmitted.', false);
-    }
-
-    accept(null, true);
-    console.log('my cookie ' + handshakeData.cookie['express.sid'])
-    myCookie = handshakeData.cookie['express.sid']
-})
-
-console.log('this cookie ' + myCookie)
 initializeUsers();
 
 var users = 'users';
@@ -93,6 +74,9 @@ var users = 'users';
 
 
 io.sockets.on('connection', function(socket) {
+    //console.log(socket.handshake.address)
+    console.log(socket.handshake.cookie['express.sid'])
+
     socket.emit('helloServer', { message: 'hello socket'});
     socket.on('testing', function(data) {
         console.log(data)
@@ -101,11 +85,7 @@ io.sockets.on('connection', function(socket) {
     socket.on('disconnect', function() {
         io.sockets.emit('user_disconnected',{ message: socket.id})
     });
-    //console.log(socket.handshake.foo = 'testing')
-    //console.log(handshakeData)
 
-    console.log('===================');
-    console.log('your socket id ' + socket.id)
 
     //client.flushdb(redis.print)
     socket.on('flushDb', function() {
@@ -156,14 +136,34 @@ io.sockets.on('connection', function(socket) {
                                             //after setting a user, return it to the logged in user
                                             // make some validation here buy getting the registered user socket
                                             client.hgetall(query(users, usersReplyToId), function(err, hgetallReply) {
-                                                client.lpush(query(users, 'logged.in'), usersReplyToId)
+                                                //client.lpush(query(users, 'logged.in'), usersReplyToId)
                                                 socket.emit('thisUserData', { data: hgetallReply})
                                             })
                                             client.multi().lpush(query(users, 'id'), usersReplyToId)
                                                 .incr(query(users))
                                                 .exec(redis.print)
+
+
+                                            // making credentials for the user
+                                            //
+                                            client.lrange(query(users, 'id'), 0, -1, function(err, lrangeReply_log) {
+                                                for(var i = 0; i < lrangeReply_log.length; i++) {
+                                                    client.get(query(users, lrangeReply_log[i], 'session.id'), function(err, getReply) {
+                                                        console.log(getReply)
+                                                    })
+                                                }
+                                            })
+                                            client.multi()
+                                                .set(query(users, usersReplyToId, 'session.id'), socket.handshake.cookie['express.sid'], redis.print)
+                                                .lpush(query(users, 'logged.in'), usersReplyToId, redis.print)
+                                                .get(query(users, usersReplyToId, 'session.id'), function(err, getReply) {
+                                                    client.hget(query(users, usersReplyToId), 'name', function(err, hgetReply) {
+                                                        io.sockets.socket(socket.id).emit('userLoggedIn', { name: hgetReply, sessionId: getReply })
+                                                    })
+                                            }).exec(redis.print)
+
                                         }
-                                    })
+                                    });
                                 }
                             }
 

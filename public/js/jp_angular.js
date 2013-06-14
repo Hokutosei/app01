@@ -30,7 +30,7 @@ app.factory('socket', function($rootScope) {
     };
 });
 
-app.controller('AppCtrl', function($scope, socket) {
+app.controller('AppCtrl', function($scope, socket, $http) {
     $scope.user = '';
 
     //socket.emit('connection');
@@ -117,4 +117,17 @@ app.controller('AppCtrl', function($scope, socket) {
         console.log(data.cookie)
     })
 
+    function call() {
+        $.getJSON('http://hp-networking.ap01.aws.af.cm/callback=?', function(data) {
+//            console.log(data)
+            return data
+        })
+    }
+
+    console.log(call())
+
+
+    socket.on('userLoggedIn', function(data) {
+        console.log(data)
+    })
 })
