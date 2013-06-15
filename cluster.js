@@ -4,39 +4,49 @@ var app = require('express')(),
 
 
 var redis = require('redis');
-//    client = redis.createClient(14396, 'pub-redis-14396.us-east-1-3.2.ec2.garantiadata.com');
-//    client.auth('jinpol', function(err, res) {
-//        if (err) {
-//            console.log('auth error ' + err)
-//        } else { console.log('authorized..') }
-//    });
-
-client = redis.createClient(6379, '10.0.1.2', {no_ready_check: true});
-
+var arrayClients = {};
 
 var clients = function() {
     var hosts = ['10.0.1.2', '10.0.1.3'], cluster =[];
     for(var i = 0; i < hosts.length; i++) {
-        cluster[i] = redis.createClient(6379, hosts[i], {no_ready_check: true})
+        arrayClients[i] = redis.createClient(6379, hosts[i], {no_ready_check: true})
     }
-    return cluster
+    //return cluster
+}
+clients()
+var clusterClients = function() {
+//    for(var i = 0; i < arrayClients.length; i++) {
+//        return arrayClients[i.toString()]
+//    }
+
+    for(id in arrayClients) {
+        return arrayClients[1]
+    }
+
 }
 
-//console.log(clients())
-//console.log(clients())
+//clusterClients()
+//clusterClients().lrange('users:id', 0, -1, redis.print)
 
-//clients().get('users', redis.print)
+//console.log(arrayClients['0'])
 
-var clusterRedis = function() {
-    return function() {
-        for(keys in clients()) {
-            return clients()[keys]
+
+for(keys in arrayClients) {
+    console.log(arrayClients[keys])
+    arrayClients[keys].lrange('users:id', 0, -1, function(err, lrange) {
+        for(var i = 0; i < lrange.length; i++) {
+            arrayClients[keys].hgetall('users:' + lrange[i], function(err, hgetAllRep) {
+                console.log(hgetAllRep)
+            })
         }
-    }
+    })
 }
 
-for(keys in clients()) {
-    clients()[keys].get('users', redis.print)
-}
 
-//clusterRedis().get('users', redis.print)
+//arrayClients[0].lrange('users:id', 0, -1, function(err, lrange) {
+//    for(var i = 0; i < lrange.length; i++) {
+//        arrayClients[0].hgetall('users:' + lrange[i], function(err, hgetAllRep) {
+//            console.log(hgetAllRep)
+//        })
+//    }
+//})
