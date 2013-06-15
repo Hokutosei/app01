@@ -174,7 +174,7 @@ io.sockets.on('connection', function(socket) {
             }
         });
     })
-})
+});
 
 function initializeUsers() {
     client.get(query('users'), function(err, reply) {
