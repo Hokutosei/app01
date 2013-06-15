@@ -5,7 +5,7 @@ var app = require('express')(),
 
 var globalIp = '126.15.226.61' || '10.0.1.2';
 var redis = require('redis');
-    client = redis.createClient(6379, globalIp, {no_ready_check: true, parser: 'hiredis'});
+    client = redis.createClient(6379, globalIp, {no_ready_check: true});
 
 var express = require('express'),
     cookie = require('cookie'),
