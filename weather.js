@@ -1,21 +1,16 @@
 var http = require('http')
 
-var loop_delay = 10000
+var loop_delay = 10000;
+
+var fetchUrl = ['http://api.openweathermap.org/data/2.5/weather?q=Akiruno-shi', 'http://rate-exchange.appspot.com/currency?from=JPY&to=PHP']
 
 function getData() {
-    http.get('http://api.openweathermap.org/data/2.5/weather?q=Akiruno-shi', function(response) {
+    http.get(fetchUrl, function(response) {
         response.on('data', function(chunk) {
             console.log(JSON.parse(chunk))
-//            var dataArr = JSON.parse(chunk).main
-//            console.log(parseInfo(JSON.stringify(dataArr)))
-//            for(var i = 0; i < dataArr.length; i++) {
-//                console.log(JSON.parse(chunk).main[i])
-//                if(dataArr[i] == 'temp') {
-//                    console.log(dataArr[i])
-//                }
-//            }
         })
     })
+
 
 }
 getData()
