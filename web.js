@@ -3,9 +3,11 @@ var app = require('express')(),
     io = require('socket.io').listen(server);
 
 
-var globalIp = '126.15.226.61' || '10.0.1.2';
+var globalIp = '60.148.89.178' || '10.0.1.2';
 var redis = require('redis');
-    client = redis.createClient(6379, globalIp, {no_ready_check: true});
+    client = redis.createClient(6379, globalIp, {no_ready_check: true}, function(err, reply) {
+        if(err) { console.log('could not connect to redis server') }
+    });
 
 var express = require('express'),
     cookie = require('cookie'),
