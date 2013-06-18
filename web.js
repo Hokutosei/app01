@@ -11,23 +11,181 @@ var redis = require('redis');
 
 var express = require('express'),
     cookie = require('cookie'),
-    connect = require('connect')
+    connect = require('connect'),
+    passport = require('passport'),
+    util = require('util'),
+    LocalStrategy = require('passport-local').Strategy;
+
 
 app.configure(function() {
+    app.use(express.logger());
     app.use(express.cookieParser());
     app.use(express.session({secret: 'session', key: 'express.sid'}));
+    app.use(express.bodyParser());
+    app.use(express.methodOverride());
+//    app.use(flash());
+    app.use(passport.initialize());
+    app.use(passport.session());
+    app.use(app.router);
 })
-
 
 app.get(/^(.+)$/, function(req, res) {
     res.sendfile('public/' + req.params[0]);
 });
+
+app.get('/', function(req, res){
+    res.render('index', { user: req.user });
+});
+
+//app.get('/account', ensureAuthenticated, function(req, res){
+//    res.render('account', { user: req.user });
+//});
+//
+//app.get('/login', function(req, res){
+//    res.render('login', { user: req.user, message: req.flash('error') });
+//});
+//
+//
+//
+//app.get('/logout', function(req, res){
+//    req.logout();
+//    res.redirect('/');
+//});
+
+
+// Simple route middleware to ensure user is authenticated.
+//   Use this route middleware on any resource that needs to be protected.  If
+//   the request is authenticated (typically via a persistent login session),
+//   the request will proceed.  Otherwise, the user will be redirected to the
+//   login page.
+
+
+var users = [
+        { id: 1, username: 'jeanepaul', password: 'jinpol' }
+    ,   { id: 2, username: 'dina', password: 'dindin' }
+    ,   { id: 3, username: 'daena', password: 'daenapauline' }
+]
+
+var users2 = [
+    { username: 'jeanepaul', password: 'jinpol'}, { username: 'dina', password: 'dina12'}
+
+]
+
+function findById(id, fn) {
+    var idx = id -1;
+    if(users[idx]) {
+        fn(null, users[idx]);
+    } else {
+        fn(new Error('User ' + id + ' does not exist'));
+    }
+}
+
+function findByUsername(username, fn) {
+    client.lrange(query('users', 'id'), 0, -1, function(err, lrangeReply) {
+        for(var i = 0; i < lrangeReply.length; i++) {
+            client.hget(query('users', lrangeReply[i]), 'username', function(err, hgetReply) {
+//                console.log(hgetReply)
+                //console.log(username)
+//                console.log('===========')
+//                console.log(hgetReply === username)
+                if(hgetReply === username) {
+                console.log('===========')
+                    console.log(username)
+                }
+
+
+//                if(hgetReply === username) {
+//                    console.log(lrangeReply[i])
+//                    console.log('found!!!!')
+//                    client.hgetall(query('users', lrangeReply[i]), function(err, hgetallReply) {
+//                        console.log(hgetallReply)
+//                        //return fn(null, hgetallReply)
+//                    })
+//                }
+//                else {
+//                    return fn(null, null)
+//                }
+            })
+        }
+    });
+
+//    for(var i = 0; i < users2.length; i++) {
+//        if(users2[i].username === username) {
+//            return fn(null, users2[i])
+//        }
+//    }
+}
+
+
+
+passport.serializeUser(function(user, done) {
+    done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+    findById(id, function(err, user) {
+        done(err, user)
+    })
+});
+
+passport.use(new LocalStrategy(
+    function(username, password, done) {
+        // asynchronous verification, for effect...
+        process.nextTick(function () {
+
+            // Find the user by username.  If there is no user with the given
+            // username, or the password is not correct, set the user to `false` to
+            // indicate failure and set a flash message.  Otherwise, return the
+            // authenticated `user`.
+            findByUsername(username, function(err, user) {
+                console.log(user)
+                if (err) { return done(err); }
+                if (!user) { return done(null, false, { message: 'Unknown user ' + username }); }
+                if (user.password != password) { return done(null, false, { message: 'Invalid password' }); }
+                return done(null, user);
+            })
+        });
+    }
+));
+//app.get('/login', function(req, res){
+//    console.log('login?')
+//    res.render('login', { user: req.user, message: req.flash('error') });
+//});
+
+app.post('/login', function(req, res, next) {
+    passport.authenticate('local', function(err, user, info) {
+        if (err) { return next(err) }
+        if (!user) {
+            //req.flash('error', info.message);
+            return res.redirect('/login')
+        }
+        req.logIn(user, function(err) {
+            if (err) { return next(err); }
+            return res.redirect('/' );
+        });
+    })(req, res, next);
+});
+
+
+
+function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) { return next(); }
+    res.redirect('/')
+}
+app.get('/logout', function(req, res){
+    req.logout();
+    res.redirect('/');
+});
+
+
+
 
 
 io.configure(function (){
     io.set('authorization', function (handshakeData, callback) {
         //console.log(handshakeData.headers.cookie)
         handshakeData.cookie = cookie.parse(handshakeData.headers.cookie)
+        console.log(handshakeData.cookie)
         callback(null, true); // error first callback style
     });
 });
@@ -115,9 +273,9 @@ io.sockets.on('connection', function(socket) {
         client.lrange(query('users', 'id'), 0, -1, function(err, usersId) {
             var validationArray = [];
             for(var i = 0, counter = 0; i < usersId.length; i++) {
-                client.hget(query('users', usersId[i]), 'name', function(err, usersIdReply) {
+                client.hget(query('users', usersId[i]), 'username', function(err, usersIdReply) {
 
-                    if(usersIdReply == data['name']) {
+                    if(usersIdReply == data['username']) {
                         var msg = 'username is not available';
                         socket.emit('userNotAvailable', { data: 'user name is not available'});
                         console.log(msg)
@@ -159,7 +317,7 @@ io.sockets.on('connection', function(socket) {
                                                 .set(query(users, usersReplyToId, 'session.id'), socket.handshake.cookie['express.sid'], redis.print)
                                                 .lpush(query(users, 'logged.in'), usersReplyToId, redis.print)
                                                 .get(query(users, usersReplyToId, 'session.id'), function(err, getReply) {
-                                                    client.hget(query(users, usersReplyToId), 'name', function(err, hgetReply) {
+                                                    client.hget(query(users, usersReplyToId), 'username', function(err, hgetReply) {
                                                         io.sockets.socket(socket.id).emit('userLoggedIn', { name: hgetReply, sessionId: getReply })
                                                     })
                                             }).exec(redis.print)
@@ -176,7 +334,23 @@ io.sockets.on('connection', function(socket) {
             }
         });
     })
+
+
+    // remove or modify this?
+    socket.on('login', function(data) {
+        console.log('loggedin?')
+        app.post('/', passport.authenticate('local', {failureRedirect: '/', failureFlash: true}), function(req, res) {
+            console.log('tried!')
+            res.redirect('/')
+        })
+
+    })
+
+
 });
+
+
+
 
 function initializeUsers() {
     client.get(query('users'), function(err, reply) {

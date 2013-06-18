@@ -12,6 +12,7 @@ function getData() {
                 console.log(JSON.parse(chunk))
             })
         })
+        counter++
     }
 
 }

@@ -31,7 +31,7 @@ app.factory('socket', function($rootScope) {
 });
 
 app.controller('AppCtrl', function($scope, socket, $http) {
-    $scope.user = '';
+    $scope.user = '', $scope.login_user = '';
 
     //socket.emit('connection');
     socket.emit('connection')
@@ -47,7 +47,8 @@ app.controller('AppCtrl', function($scope, socket, $http) {
     }
 
     $scope.login = function() {
-        socket.emit('login', $scope.user)
+        //socket.emit('login', $scope.login_user)
+        $http.post('/login', $scope.login_user)
     }
 
 
