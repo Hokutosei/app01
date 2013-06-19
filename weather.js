@@ -1,7 +1,7 @@
 var http = require('http'),
     redis = require('redis');
 
-var loop_delay = 100000, counter = 0;
+var loop_delay = 1800000, counter = 0, serverStart = new Date();
 
 var globalIp = '60.148.89.178' || '10.0.1.2';
 var redis = require('redis');
@@ -15,34 +15,61 @@ var fetchUrl = [
     { 'currency-yen-php': 'http://rate-exchange.appspot.com/currency?from=JPY&to=PHP'}
 ]
 
-var key = 'analytics-info'
+var mainKey = 'analytics-info'
 
 function initializeKey() {
-    client.get(query(key, 'id'), function(err, getReply) {
+    client.get(query(mainKey, 'id'), function(err, getReply) {
         if(getReply == null) {
-            client.set(query(key, 'id'), '0', redis.print)
+            client.set(query(mainKey, 'id'), '0', redis.print)
         }
     })
 }
 initializeKey()
 function getData() {
-    for(var i = 0; i < fetchUrl.length; i++) {
-        for(key in fetchUrl[i]) {
-            switch (key.toString()) {
-                case 'weather-akiruno':
-                    console.log('weather');
-                    getRequest(fetchUrl[i]['weather-akiruno'], 'weather-akiruno');
-                    break;
-                case 'currency-yen-php':
-                    console.log('currency');
-                    getRequest(fetchUrl[i]['currency-yen-php'], 'currency-yen-php');
-                    break;
+    client.get(query(mainKey, 'id'), function(err, getReply) {
+        for(var i = 0; i < fetchUrl.length; i++) {
+            for(key in fetchUrl[i]) {
+                switch (key.toString()) {
+                    case 'weather-akiruno':
+                        console.log('weather');
+                        getRequest(fetchUrl[i]['weather-akiruno'], 'weather-akiruno', function(data) {
+                            var weatherData = {
+                                'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
+                                'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
+                                'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
+                                'weather-main'          : data['weather'][0].main,
+                                'weather-description'   : data['weather'][0].description,
+                                'time'                  : new Date()
+                            }
+                            console.log(weatherData)
+                            client.hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, redis.print)
+                        });
+                        break;
+                    case 'currency-yen-php':
+                        console.log('currency');
+                        getRequest(fetchUrl[i]['currency-yen-php'], 'currency-yen-php', function(data) {
+                            var pesoCurrency = {
+                                'currency'  :   data['rate'],
+                                'from'      :   data['from'],
+                                'to'        :   data['to'],
+                                'time'      :   new Date()
+                            }
+                            console.log(pesoCurrency)
+                            client.hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, redis.print)
+                        });
+                        break;
+                }
+
+            }
+            if(i == fetchUrl.length -1 ) {
+                client.multi()
+                    .lpush(query(mainKey, 'id.list'), getReply)
+                    .incr(query(mainKey, 'id'))
+                    .exec(redis.print)
+                console.log(serverStart)
             }
         }
-        if(i == fetchUrl.length -1 ) {
-             client.incr(query(key, 'id'), redis.print)
-        }
-    }
+    })
 }
 getData();
 setInterval(function() { getData()
@@ -65,15 +92,22 @@ function parseInfo( info ) {
     return obj;
 }
 
-function getRequest(url, key) {
+function getRequest(url, key, fn) {
+    var dataArray = {}
     http.get(url, function(response) {
         response.on('data', function(chunk) {
             var data = JSON.parse(chunk)
             console.log('====================== ' + key)
-            console.log(data)
+            var counter = 1;
+            for(keys in data) {
+                dataArray[keys] = data[keys.toString()]
+                counter++;
+                if(counter == Object.keys(data).length) {
+                    return fn(dataArray)
+                }
+            }
         })
     })
-
 }
 
 function query() {
