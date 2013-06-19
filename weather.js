@@ -1,7 +1,7 @@
 var http = require('http'),
     redis = require('redis');
 
-var loop_delay = 1800000, counter = 0, serverStart = new Date();
+var loop_delay = 1200000, counter = 0, serverStart = new Date();
 
 var globalIp = '60.148.89.178' || '10.0.1.2';
 var redis = require('redis');
