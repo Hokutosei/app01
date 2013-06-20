@@ -1,11 +1,12 @@
 var http = require('http'),
-    redis = require('redis');
+    redis = require('redis'),
+    queryString = require('querystring');
 
-var loop_delay = 120000, counter = 0, serverStart = new Date();
+var loop_delay = 5000, counter = 0, serverStart = new Date();
 
 var globalIp = '60.148.89.178' || '10.0.1.2';
 var redis = require('redis');
-client = redis.createClient(6379, globalIp, {no_ready_check: true}, function(err, reply) {
+var client = redis.createClient(6379, globalIp, {no_ready_check: true}, function(err, reply) {
     if(err) { console.log('could not connect to redis server') }
 });
 
@@ -42,7 +43,12 @@ function getData() {
                                 'time'                  : new Date()
                             }
                             console.log(weatherData)
-                            client.hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, redis.print)
+                            client.hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, function(err, hmsetReply) {
+                                console.log(hmsetReply);
+                                client.get(query(mainKey, 'id'), function(err, getReply) {
+                                    makePost(getReply, mainKey, 'weather-akiruno');
+                                })
+                            })
                         });
                         break;
                     case 'currency-yen-php':
@@ -55,18 +61,22 @@ function getData() {
                                 'time'      :   new Date()
                             }
                             console.log(pesoCurrency)
-                            client.hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, redis.print)
+                            client.hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, function(err, hmsetReply) {
+                                client.get(query(mainKey, 'id'), function(err, getReply) {
+                                    makePost(getReply, mainKey, 'currency-yen-php')
+                                })
+                            })
                         });
                         break;
                 }
 
             }
             if(i == fetchUrl.length -1 ) {
-                client.multi()
-                    .lpush(query(mainKey, 'id.list'), getReply)
-                    .incr(query(mainKey, 'id'))
-                    .exec(redis.print)
-                console.log(serverStart)
+//                client.multi()
+//                    .lpush(query(mainKey, 'id.list'), getReply)
+//                    .incr(query(mainKey, 'id'))
+//                    .exec(redis.print)
+//                console.log(serverStart)
             }
         }
     })
@@ -114,4 +124,29 @@ function query() {
     var arr = [];
     for(var i = 0; i < arguments.length; i++) { arr.push(arguments[i]) }
     return arguments.length == 1 ? arr[0] : arr.join(':');
+}
+
+
+function makePost(id, mainKey, dataKey) {
+    var options = {
+        hostname    : '127.0.0.1',
+        port        : 1337,
+        path        : '/sendmail',
+        method      : 'POST'
+    };
+
+    var req = http.request(options, function(res) {
+        res.on('data', function(chunk) {
+            console.log('Response: ' + chunk)
+        })
+    });
+
+    req.on('error', function(e) {
+        console.log(e)
+    })
+
+    var sendDataString = queryString.stringify({ id: id, mainKey: mainKey, dataKey: dataKey})
+
+    req.write(sendDataString);
+    req.end();
 }
