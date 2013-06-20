@@ -2,7 +2,7 @@ var http = require('http'),
     redis = require('redis'),
     queryString = require('querystring');
 
-var loop_delay = 5000, counter = 0, serverStart = new Date();
+var loop_delay = 10000, counter = 0, serverStart = new Date();
 
 var globalIp = '60.148.89.178' || '10.0.1.2';
 var redis = require('redis');
@@ -72,18 +72,17 @@ function getData() {
 
             }
             if(i == fetchUrl.length -1 ) {
-//                client.multi()
-//                    .lpush(query(mainKey, 'id.list'), getReply)
-//                    .incr(query(mainKey, 'id'))
-//                    .exec(redis.print)
-//                console.log(serverStart)
+                client.multi()
+                    .lpush(query(mainKey, 'id.list'), getReply)
+                    .incr(query(mainKey, 'id'))
+                    .exec(redis.print)
+                console.log(serverStart)
             }
         }
     })
 }
 getData();
-setInterval(function() { getData()
-}, loop_delay)
+setInterval(function() { getData() }, loop_delay)
 
 
 function parseInfo( info ) {
