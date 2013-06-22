@@ -64,4 +64,4 @@ function fetchData() {
 
 
 
-setInterval(function() { facebook_feed() }, 10000)
+setInterval(function() { facebook_feed() }, 50000)
