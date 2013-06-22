@@ -38,7 +38,8 @@ function facebook_feed() {
             }
         });
 
-    })
+    });
+    initializeFeeds()
 }
 
 function fetchAllData(objectData, i, obj) {
@@ -65,11 +66,18 @@ function fetchData() {
 //object_id
 //created_time
 //updated_time
+initializeFeeds()
+function initializeFeeds() {
+    client.get('facebook:feed:interval', function(err, getReplyInterval) {
+        var interval = getReplyInterval
+        console.log(getReplyInterval)
+        setTimeout(facebook_feed, getReplyInterval)
+    })
+}
 
-
-client.get('facebook:feed:interval', function(err, getReplyInterval) {
-    var interval = getReplyInterval
-    console.log(getReplyInterval)
-    setInterval(function() { facebook_feed() }, getReplyInterval)
-})
+//client.get('facebook:feed:interval', function(err, getReplyInterval) {
+//    var interval = getReplyInterval
+//    console.log(getReplyInterval)
+//    setInterval(function() { facebook_feed() }, getReplyInterval)
+//})
 
