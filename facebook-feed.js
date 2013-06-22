@@ -33,8 +33,8 @@ function facebook_feed() {
                         console.log('***************************************************************');
                         console.log(a)
                         console.log(dataArray.reverse()[a]);
-                        //console.log('***************************************************************')
                     }
+                    console.log('***************************************************************')
                     console.log('Took ' + finishTime + ' ms')
                 }
             }
