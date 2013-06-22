@@ -1,8 +1,6 @@
 var https = require('https');
 
 var access_token = 'CAACEdEose0cBAGrKghMYRw8j2BdoOO9rnQW3h8i9LdQn6FqT9cAaoiND55ZAZAex901bQV2BfiZA0jOEfEDa8r5eFdpysKtHZCjVJTVplMoXateCVBG01zCfJXcCYOjEbDosm6Uoc5Xq2xzLwdLz8K71CdGiBmAZD';
-var dataArray = [];
-
 function facebook_feed() {
     https.get('https://graph.facebook.com/1638322655/home?access_token=' + access_token, function(response) {
         var data = '';
@@ -10,6 +8,8 @@ function facebook_feed() {
             data += chunk;
         });
         response.on('end', function(){
+            var dataArray = [];
+
             var obj = JSON.parse(data), objectData = obj['data'];
             var objectLength = Object.keys(obj['data']).length;
             for(var i = 0; i < objectLength; i++) {
@@ -26,7 +26,7 @@ function facebook_feed() {
                     for(var a = 0; a < dataArray.length; a++) {
                         console.log('***************************************************************');
                         console.log(a)
-                        console.log(dataArray[a]);
+                        console.log(dataArray.reverse()[a]);
                         //console.log('***************************************************************')
                     }
                 }
