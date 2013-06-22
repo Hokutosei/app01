@@ -1,6 +1,7 @@
 var https = require('https');
 
-var access_token = 'CAACEdEose0cBAEBy9Y03ZBcxMu6zn5iv5SHiowbzAUiDN8ZBrufbIQvYQoghyj0IoGMZAWY5NQ1jI3rfT39ZCY5PBZCR0bbacbyxSfgdLObZCWIsiYM94K2w6zY6N2uqrFJUqCxHo91uO1s2YMclS7GMLW32Oejr8ZD';
+var access_token = 'CAACEdEose0cBAGrKghMYRw8j2BdoOO9rnQW3h8i9LdQn6FqT9cAaoiND55ZAZAex901bQV2BfiZA0jOEfEDa8r5eFdpysKtHZCjVJTVplMoXateCVBG01zCfJXcCYOjEbDosm6Uoc5Xq2xzLwdLz8K71CdGiBmAZD';
+var dataArray = [];
 
 function facebook_feed() {
     https.get('https://graph.facebook.com/1638322655/home?access_token=' + access_token, function(response) {
@@ -9,11 +10,58 @@ function facebook_feed() {
             data += chunk;
         });
         response.on('end', function(){
-            var obj = JSON.parse(data);
-            console.log(obj)
+            var obj = JSON.parse(data), objectData = obj['data'];
+            var objectLength = Object.keys(obj['data']).length;
+            for(var i = 0; i < objectLength; i++) {
+                var fromUser = obj['data'][i].from.name;
+                var keyData = ['name', 'story', 'message', 'type', 'created_time'];
+                obj['data'][i].from.name = {};
+                for(var d = 0; d < keyData.length; d++) {
+                    if(keyData[d] == 'name') { objectData[i]['name'] = fromUser }
+                    obj['data'][i].from.name[keyData[d]] = objectData[i][keyData[d]]
+                }
+                dataArray.push(obj['data'][i].from.name)
+                if(i == objectLength - 1) {
+                    //console.log(dataArray)
+                    for(var a = 0; a < dataArray.length; a++) {
+                        console.log('***************************************************************');
+                        console.log(a)
+                        console.log(dataArray[a]);
+                        //console.log('***************************************************************')
+                    }
+                }
+            }
         });
 
     })
 }
+
+function fetchAllData(objectData, i, obj) {
+    for(key in objectData[i]) {
+        obj['data'][i].from.name[key] = objectData[i][key]
+    }
+}
+
+function fetchData() {
+
+}
+
+
+//id
+//from
+//story
+//picture
+//link
+//icon
+//actions
+//privacy
+//type
+//status_type
+//object_id
+//created_time
+//updated_time
+
+
+
 
 setInterval(function() { facebook_feed() }, 10000)
