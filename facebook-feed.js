@@ -1,5 +1,10 @@
 var https = require('https');
 
+var globalIp = '60.148.89.178' || '10.0.1.2';
+var redis = require('redis');
+var client = redis.createClient(6379, globalIp, {no_ready_check: true})
+
+
 var access_token = 'CAACEdEose0cBAGrKghMYRw8j2BdoOO9rnQW3h8i9LdQn6FqT9cAaoiND55ZAZAex901bQV2BfiZA0jOEfEDa8r5eFdpysKtHZCjVJTVplMoXateCVBG01zCfJXcCYOjEbDosm6Uoc5Xq2xzLwdLz8K71CdGiBmAZD';
 function facebook_feed() {
     https.get('https://graph.facebook.com/1638322655/home?access_token=' + access_token, function(response) {
@@ -61,14 +66,10 @@ function fetchData() {
 //created_time
 //updated_time
 
-var globalIp = '60.148.89.178' || '10.0.1.2';
-var redis = require('redis');
-var client = redis.createClient(6379, globalIp, {no_ready_check: true})
 
-var interval = function() {
-    client.get('facebook:feed:interval', function(err, getReply) {
-        return getReply
-    })
-}
+client.get('facebook:feed:interval', function(err, getReplyInterval) {
+    var interval = getReplyInterval
+    console.log(getReplyInterval)
+    setInterval(function() { facebook_feed() }, getReplyInterval)
+})
 
-setInterval(function() { facebook_feed() }, interval())
