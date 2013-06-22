@@ -6,8 +6,8 @@ var client = redis.createClient(6379, globalIp, {no_ready_check: true});
 var counter = 0
 
 
-var access_token = 'CAAEgAJT96bwBAHNZA1U83fATEX41I19wTY3v9hZBF6riZC2zzrAb3nCvTZB0lPXfapv0cuetOpoTnrUSDc0QKa7mBWxBOmQZAF3K2gJewXjVNtTbQaOwWsrqWv5JzloglfNEIwTfD9tbQK9q65i66Ys8TC4jkHgEZD';
-function facebook_feed() {
+//var access_token = '1381573655388105|r6JKpamCACYcFFqgVRdx1esIJF';
+function facebook_feed(access_token) {
     var startTime = new Date();
     https.get('https://graph.facebook.com/1638322655/home?access_token=' + access_token, function(response) {
         var data = '', finishTime = new Date() - startTime;
@@ -52,11 +52,13 @@ function fetchAllData(objectData, i, obj) {
     }
 }
 
-initializeFeeds()
+initializeFeeds();
 function initializeFeeds() {
     client.get('facebook:feed:interval', function(err, getReplyInterval) {
-        var interval = getReplyInterval
-        console.log(getReplyInterval)
-        setTimeout(facebook_feed, getReplyInterval)
+        client.get('facebook:access_token', function(err, getAccessToken) {
+            //var interval = getReplyInterval
+            console.log(getReplyInterval)
+            setTimeout(facebook_feed(getAccessToken), getReplyInterval)
+        })
     })
 }
