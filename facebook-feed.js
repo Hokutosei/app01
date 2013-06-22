@@ -2,7 +2,8 @@ var https = require('https');
 
 var globalIp = '60.148.89.178' || '10.0.1.2';
 var redis = require('redis');
-var client = redis.createClient(6379, globalIp, {no_ready_check: true})
+var client = redis.createClient(6379, globalIp, {no_ready_check: true});
+var counter = 0
 
 
 var access_token = 'CAACEdEose0cBAGrKghMYRw8j2BdoOO9rnQW3h8i9LdQn6FqT9cAaoiND55ZAZAex901bQV2BfiZA0jOEfEDa8r5eFdpysKtHZCjVJTVplMoXateCVBG01zCfJXcCYOjEbDosm6Uoc5Xq2xzLwdLz8K71CdGiBmAZD';
@@ -34,7 +35,8 @@ function facebook_feed() {
                         console.log(a)
                         console.log(dataArray.reverse()[a]);
                     }
-                    console.log('***************************************************************')
+                    counter++;
+                    console.log(counter + '***************************************************************')
                     console.log('Took ' + finishTime + ' ms')
                 }
             }
@@ -50,24 +52,6 @@ function fetchAllData(objectData, i, obj) {
     }
 }
 
-function fetchData() {
-
-}
-
-
-//id
-//from
-//story
-//picture
-//link
-//icon
-//actions
-//privacy
-//type
-//status_type
-//object_id
-//created_time
-//updated_time
 initializeFeeds()
 function initializeFeeds() {
     client.get('facebook:feed:interval', function(err, getReplyInterval) {
@@ -76,10 +60,3 @@ function initializeFeeds() {
         setTimeout(facebook_feed, getReplyInterval)
     })
 }
-
-//client.get('facebook:feed:interval', function(err, getReplyInterval) {
-//    var interval = getReplyInterval
-//    console.log(getReplyInterval)
-//    setInterval(function() { facebook_feed() }, getReplyInterval)
-//})
-
