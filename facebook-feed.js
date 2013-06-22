@@ -56,9 +56,9 @@ initializeFeeds();
 function initializeFeeds() {
     client.get('facebook:feed:interval', function(err, getReplyInterval) {
         client.get('facebook:access_token', function(err, getAccessToken) {
-            //var interval = getReplyInterval
+            var interval = getReplyInterval
             console.log(getReplyInterval)
-            setTimeout(facebook_feed(getAccessToken), getReplyInterval)
+            setTimeout(facebook_feed(getAccessToken), interval)
         })
     })
 }
