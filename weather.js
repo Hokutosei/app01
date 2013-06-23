@@ -52,7 +52,7 @@ function main() {
     function initializer() {
         client.get(query('weather', 'interval', 'time'), function(err, intervalTime) {
             console.log('Triggering getdata() in... ' + intervalTime + ' from cluster worker id ' + cluster.worker.id + ' / ' + cpuCount)
-            setTimeout(getData, 3000)
+            setTimeout(getData, intervalTime)
         })
     }
 
