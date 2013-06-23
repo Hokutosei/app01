@@ -52,7 +52,7 @@ function main() {
     function initializer() {
         client.get(query('weather', 'interval', 'time'), function(err, intervalTime) {
             console.log('Triggering getdata() in... ' + intervalTime + ' from cluster worker id ' + cluster.worker.id + ' / ' + cpuCount)
-            setTimeout(getData, intervalTime)
+            setTimeout(getData, 3000)
         })
     }
 
@@ -95,6 +95,13 @@ function main() {
                                 client.hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, function(err, hmsetReply) {
                                     client.get(query(mainKey, 'id'), function(err, getReply) {
                                         makePost(getReply, mainKey, 'currency-yen-php')
+                                    })
+                                })
+                                client.get(query(mainKey, 'id'), function(err, getReply) {
+                                    console.log('getreply ' + getReply)
+                                    var recentId = getReply - 1;
+                                    client.hget(query(mainKey, recentId, 'currency-yen-php'), 'currency', function(err, hgetReply) {
+                                        console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
                                     })
                                 })
                             });
