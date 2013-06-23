@@ -23,8 +23,17 @@ function initializeKey() {
         if(getReply == null) {
             client.set(query(mainKey, 'id'), '0', redis.print)
         }
+        initializer()
     })
 }
+
+function initializer() {
+    client.get(query('weather', 'interval', 'time'), function(err, intervalTime) {
+        console.log('Triggering getdata() in... ' + intervalTime)
+        setTimeout(getData, intervalTime)
+    })
+}
+
 initializeKey()
 function getData() {
     client.get(query(mainKey, 'id'), function(err, getReply) {
@@ -77,12 +86,14 @@ function getData() {
                     .incr(query(mainKey, 'id'))
                     .exec(redis.print)
                 console.log(serverStart)
+                initializer()
             }
         }
     })
 }
-getData();
-setInterval(function() { getData() }, loop_delay)
+//getData();
+//setInterval(function() { getData() }, loop_delay)
+
 
 
 function parseInfo( info ) {

@@ -16,7 +16,9 @@
     "cookie": "x",
     "connect": "x",
     "nodemailer" : "x",
-    "querystring": "x"
+    "querystring": "x",
+    "xml2js": "x",
+    "eyes": "x"
   },
   "engines": {
     "node": "0.10.x",
