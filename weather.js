@@ -12,19 +12,18 @@ var client = redis.createClient(6379, globalIp, {no_ready_check: true}, function
 
 
 var cluster = require('cluster');
+var cpuCount = require('os').cpus().length;
 
 // Code to run if we're in the master process
 if (cluster.isMaster) {
 
     // Count the machine's CPUs
-    var cpuCount = require('os').cpus().length;
 
     // Create a worker for each CPU
     for (var i = 0; i < cpuCount; i += 1) {
         cluster.fork();
     }
     console.log('Master is working.. ' + cluster)
-// Code to run if we're in a worker process
 } else {
 
     console.log('Working ' + cluster.worker.id + ' Running!')
@@ -52,7 +51,7 @@ function main() {
 
     function initializer() {
         client.get(query('weather', 'interval', 'time'), function(err, intervalTime) {
-            console.log('Triggering getdata() in... ' + intervalTime + ' from cluster worker id ' + cluster.worker.id)
+            console.log('Triggering getdata() in... ' + intervalTime + ' from cluster worker id ' + cluster.worker.id + ' / ' + cpuCount)
             setTimeout(getData, intervalTime)
         })
     }
