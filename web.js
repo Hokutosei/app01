@@ -23,106 +23,58 @@ app.configure(function() {
     app.use(express.session({secret: 'session', key: 'express.sid'}));
     app.use(express.bodyParser());
     app.use(express.methodOverride());
-//    app.use(flash());
     app.use(passport.initialize());
     app.use(passport.session());
     app.use(app.router);
 })
 
 app.get(/^(.+)$/, function(req, res) {
+    console.log('===========================')
     res.sendfile('public/' + req.params[0]);
 });
 
-app.get('/', function(req, res){
-    res.render('index', { user: req.user });
+//app.get('/', ensureAuthenticated, function(req, res){
+//    res.render('public/index', { user: req.user });
+////    var data = {user: req.user};
+////    console.log('===========================')
+////    console.log(data)
+////    res.write(JSON.stringify(data))
+//});
+
+
+io.configure(function (){
+    io.set('authorization', function (handshakeData, callback) {
+        callback(null, true); // error first callback style
+    });
 });
 
-//app.get('/account', ensureAuthenticated, function(req, res){
-//    res.render('account', { user: req.user });
-//});
-//
-//app.get('/login', function(req, res){
-//    res.render('login', { user: req.user, message: req.flash('error') });
-//});
-//
-//
-//
-//app.get('/logout', function(req, res){
-//    req.logout();
-//    res.redirect('/');
-//});
-
-
-// Simple route middleware to ensure user is authenticated.
-//   Use this route middleware on any resource that needs to be protected.  If
-//   the request is authenticated (typically via a persistent login session),
-//   the request will proceed.  Otherwise, the user will be redirected to the
-//   login page.
-
-
-var users = [
-        { id: 1, username: 'jeanepaul', password: 'jinpol' }
-    ,   { id: 2, username: 'dina', password: 'dindin' }
-    ,   { id: 3, username: 'daena', password: 'daenapauline' }
-]
-
-var users2 = [
-    { username: 'jeanepaul', password: 'jinpol'}, { username: 'dina', password: 'dina12'}
-
-]
-
 function findById(id, fn) {
-    var idx = id -1;
-    if(users[idx]) {
-        fn(null, users[idx]);
-    } else {
-        fn(new Error('User ' + id + ' does not exist'));
-    }
+    client.lrange(query(users, 'id'), 0, -1, function(err, lrangeReply) {
+        if (lrangeReply.indexOf(id) > -1) { fn(null, id) }
+        else { fn(new Error('User ' + id + ' does not exist')) }
+    })
 }
 
 function findByUsername(username, fn) {
-    client.lrange(query('users', 'id'), 0, -1, function(err, lrangeReply) {
-        for(var i = 0; i < lrangeReply.length; i++) {
-            client.hget(query('users', lrangeReply[i]), 'username', function(err, hgetReply) {
-//                console.log(hgetReply)
-                //console.log(username)
-//                console.log('===========')
-//                console.log(hgetReply === username)
-                if(hgetReply === username) {
-                console.log('===========')
-                    console.log(username)
-                }
-
-
-//                if(hgetReply === username) {
-//                    console.log(lrangeReply[i])
-//                    console.log('found!!!!')
-//                    client.hgetall(query('users', lrangeReply[i]), function(err, hgetallReply) {
-//                        console.log(hgetallReply)
-//                        //return fn(null, hgetallReply)
-//                    })
-//                }
-//                else {
-//                    return fn(null, null)
-//                }
-            })
+    client.hgetall(query('users', username), function(err, hgetAllReply) {
+        if(hgetAllReply != null && hgetAllReply['username'] === username) {
+            return fn(null, hgetAllReply)
+        } else {
+            return fn(null, null)
         }
-    });
-
-//    for(var i = 0; i < users2.length; i++) {
-//        if(users2[i].username === username) {
-//            return fn(null, users2[i])
-//        }
-//    }
+    })
 }
 
 
 
 passport.serializeUser(function(user, done) {
+    console.log('serializing')
+    console.log(user)
     done(null, user.id);
 });
 
 passport.deserializeUser(function(id, done) {
+    console.log('finding by id')
     findById(id, function(err, user) {
         done(err, user)
     })
@@ -137,31 +89,37 @@ passport.use(new LocalStrategy(
             // username, or the password is not correct, set the user to `false` to
             // indicate failure and set a flash message.  Otherwise, return the
             // authenticated `user`.
+            var startTime = new Date()
             findByUsername(username, function(err, user) {
+                console.log('============')
                 console.log(user)
-                if (err) { return done(err); }
-                if (!user) { return done(null, false, { message: 'Unknown user ' + username }); }
+                if (user === null) {
+                    console.log('is not user');
+                    return done(null, false, { message: 'Unknown user ' + username });
+                }
                 if (user.password != password) { return done(null, false, { message: 'Invalid password' }); }
                 return done(null, user);
             })
         });
     }
 ));
-//app.get('/login', function(req, res){
-//    console.log('login?')
-//    res.render('login', { user: req.user, message: req.flash('error') });
-//});
 
 app.post('/login', function(req, res, next) {
     passport.authenticate('local', function(err, user, info) {
         if (err) { return next(err) }
-        if (!user) {
-            //req.flash('error', info.message);
-            return res.redirect('/login')
+        if (user === null) {
+//            return res.redirect('/login')
+            res.write('failed')
+            res.end()
         }
         req.logIn(user, function(err) {
             if (err) { return next(err); }
-            return res.redirect('/' );
+//            io.sockets.emit('successLogin', { data: user })
+//            return res.redirect('/' );
+//    res.render('account', { user: req.user });
+            var data = {user: req.user}
+            res.write(JSON.stringify(data));
+            res.end()
         });
     })(req, res, next);
 });
@@ -235,17 +193,9 @@ var users = 'users';
 
 io.sockets.on('connection', function(socket) {
     //console.log(socket.handshake.address)
-    console.log(socket.handshake.cookie['express.sid'])
 
-    socket.emit('helloServer', { message: 'hello socket'});
-    socket.on('testing', function(data) {
-        console.log(data)
-    });
-
-    socket.on('disconnect', function() {
-        io.sockets.emit('user_disconnected',{ message: socket.id})
-    });
-
+    console.log(socket.id)
+    socket.handshake.id = socket.id
 
     //client.flushdb(redis.print)
     socket.on('flushDb', function() {
@@ -255,98 +205,24 @@ io.sockets.on('connection', function(socket) {
         });
     });
 
-    client.llen('users:id', function(err, reply) {
-        if (err) { console.log('could not make llen of users:id..')}
-        else { console.log('users:id ' + reply) }
+    socket.on('userRegistrationNew', function(data) {
+        console.log(data)
+        data['created_at'] = new Date();
+
+        client.get(query(users), function(err, getReply) {
+            data['id'] = getReply
+            console.log(getReply)
+            client.multi().hmset(query(users, data['username']), data, function(err, hmsetReply) {
+                console.log(hmsetReply)
+            })
+                .lpush(query(users, 'id'), getReply, redis.print)
+                .incr(query(users), redis.print)
+                .exec(function(err, execReply) {
+                    console.log(execReply)
+                });
+
+        })
     });
-
-    socket.on('userRegistration', function(data) {
-        var keysCount = countObjectKeys(data)
-
-        client.lrange(query(users, 'id'), 0, -1, function(err, usersId) {
-            if(usersId.length == 0) {
-                client.multi().set(query(users), 0, redis.print)
-                    .lpush(query(users, 'id'), 0, redis.print)
-                    .exec(redis.print)
-            }
-        })
-        client.lrange(query('users', 'id'), 0, -1, function(err, usersId) {
-            var validationArray = [];
-            for(var i = 0, counter = 0; i < usersId.length; i++) {
-                client.hget(query('users', usersId[i]), 'username', function(err, usersIdReply) {
-
-                    if(usersIdReply == data['username']) {
-                        var msg = 'username is not available';
-                        socket.emit('userNotAvailable', { data: 'user name is not available'});
-                        console.log(msg)
-                        validationArray.push(1)
-                    } else if((counter == (usersId.length -1)) && arrayHasValue(validationArray, 1) != true) {
-                        console.log('save this user');
-                        client.get(query(users), function(err, usersReplyToId) {
-                            console.log(usersReplyToId)
-                            var dataCounter = 0, startTime = new Date();
-                            data['id'] = usersReplyToId, data['socketId'] = socket.id;
-                            for(keys in data) {
-                                if(data[keys] != '') {
-                                    client.hset(query(users, usersReplyToId), keys, data[keys], function(err, hsetReply) {
-                                        dataCounter++;
-                                        if(countObjectKeys(data) == dataCounter) {
-                                            console.log('hset took ' + (new Date() - startTime) + ' ms');
-
-                                            //after setting a user, return it to the logged in user
-                                            // make some validation here buy getting the registered user socket
-                                            client.hgetall(query(users, usersReplyToId), function(err, hgetallReply) {
-                                                //client.lpush(query(users, 'logged.in'), usersReplyToId)
-                                                socket.emit('thisUserData', { data: hgetallReply})
-                                            })
-                                            client.multi().lpush(query(users, 'id'), usersReplyToId)
-                                                .incr(query(users))
-                                                .exec(redis.print)
-
-
-                                            // making credentials for the user
-                                            //
-                                            client.lrange(query(users, 'id'), 0, -1, function(err, lrangeReply_log) {
-                                                for(var i = 0; i < lrangeReply_log.length; i++) {
-                                                    client.get(query(users, lrangeReply_log[i], 'session.id'), function(err, getReply) {
-                                                        console.log(getReply)
-                                                    })
-                                                }
-                                            })
-                                            client.multi()
-                                                .set(query(users, usersReplyToId, 'session.id'), socket.handshake.cookie['express.sid'], redis.print)
-                                                .lpush(query(users, 'logged.in'), usersReplyToId, redis.print)
-                                                .get(query(users, usersReplyToId, 'session.id'), function(err, getReply) {
-                                                    client.hget(query(users, usersReplyToId), 'username', function(err, hgetReply) {
-                                                        io.sockets.socket(socket.id).emit('userLoggedIn', { name: hgetReply, sessionId: getReply })
-                                                    })
-                                            }).exec(redis.print)
-
-                                        }
-                                    });
-                                }
-                            }
-
-                        })
-                    }
-                    counter++;
-                })
-            }
-        });
-    })
-
-
-    // remove or modify this?
-    socket.on('login', function(data) {
-        console.log('loggedin?')
-        app.post('/', passport.authenticate('local', {failureRedirect: '/', failureFlash: true}), function(req, res) {
-            console.log('tried!')
-            res.redirect('/')
-        })
-
-    })
-
-
 });
 
 

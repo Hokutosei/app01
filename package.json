@@ -18,7 +18,8 @@
     "nodemailer" : "x",
     "querystring": "x",
     "xml2js": "x",
-    "eyes": "x"
+    "eyes": "x",
+    "http-proxy": "x"
   },
   "engines": {
     "node": "0.10.x",

@@ -35,20 +35,19 @@ app.controller('AppCtrl', function($scope, socket, $http) {
 
     //socket.emit('connection');
     socket.emit('connection')
-    socket.on('helloServer', function(data) {
-        console.log(data.message)
-    })
-    socket.emit('testing', {message: 'test'})
     $scope.submitUserReg = function() {
         //console.log($scope.user['name'])
-
-        socket.emit('userRegistration', $scope.user);
+        socket.emit('userRegistrationNew', $scope.user);
         //socket.emit('userRegistration', userData )
     }
 
     $scope.login = function() {
-        //socket.emit('login', $scope.login_user)
-        $http.post('/login', $scope.login_user)
+//        socket.emit('login', $scope.login_user)
+        $http.post('/login', $scope.login_user).success(function(response) {
+            console.log(response)
+            console.log(typeof response)
+            $scope.loginMessage = response['user'].username
+        })
     }
 
 
@@ -72,13 +71,6 @@ app.controller('AppCtrl', function($scope, socket, $http) {
         }
     }
 
-    socket.on('userHsetData', function(data) {
-        console.log(data)
-    })
-
-    socket.on('myCurrentUser', function(data) {
-        console.log(data)
-    })
 
     $(function() {
         $('#tabs').tabs();
@@ -94,7 +86,7 @@ app.controller('AppCtrl', function($scope, socket, $http) {
     })
 
     socket.on('lrangeReply', function(data) {
-        console.log(data)
+//        console.log(data)
     })
 
     socket.on('userNotAvailable', function(data) {
@@ -114,21 +106,29 @@ app.controller('AppCtrl', function($scope, socket, $http) {
         console.log(data)
     })
 
-    socket.on('testCookie', function(data) {
-        console.log(data.cookie)
-    })
 
-    function call() {
-        $.getJSON('http://hp-networking.ap01.aws.af.cm/callback=?', function(data) {
-//            console.log(data)
-            return data
-        })
-    }
-
-    console.log(call())
-
-
-    socket.on('userLoggedIn', function(data) {
+    socket.on('successLogin', function(data) {
         console.log(data)
     })
+
+    socket.on('invalidAccount', function(data) {
+        console.log(data)
+    })
+
 })
+
+function parseInfo( info ) {
+    var lines = info.split( "\r\n" );
+    var obj = { };
+    for ( var i = 0, l = info.length; i < l; i++ ) {
+        var line = lines[ i ];
+        if ( line && line.split ) {
+            line = line.split( ":" );
+            if ( line.length > 1 ) {
+                var key = line.shift( );
+                obj[ key ] = line.join( ":" );
+            }
+        }
+    }
+    return obj;
+}
