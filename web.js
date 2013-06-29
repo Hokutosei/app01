@@ -1,6 +1,7 @@
 var app = require('express')(),
     server = require('http').createServer(app),
-    io = require('socket.io').listen(server);
+    io = require('socket.io').listen(server),
+    fs = require('fs');
 
 
 var globalIp = '60.148.89.178' || '10.0.1.2';
@@ -18,6 +19,8 @@ var express = require('express'),
 
 
 app.configure(function() {
+    app.use('/public', __dirname + '/public');
+    app.use(express.static(__dirname + '/public'));
     app.use(express.logger());
     app.use(express.cookieParser());
     app.use(express.session({secret: 'session', key: 'express.sid'}));
@@ -28,18 +31,32 @@ app.configure(function() {
     app.use(app.router);
 })
 
-app.get(/^(.+)$/, function(req, res) {
-    console.log('===========================')
-    res.sendfile('public/' + req.params[0]);
-});
-
-//app.get('/', ensureAuthenticated, function(req, res){
-//    res.render('public/index', { user: req.user });
-////    var data = {user: req.user};
-////    console.log('===========================')
-////    console.log(data)
-////    res.write(JSON.stringify(data))
+//app.get(/^(.+)$/, function(req, res) {
+//    console.log('===========================')
+//    console.log(req.user)
+////    res.send('test')
+////    res.sendfile('public/' + req.params[0]);
+//    res.send('testing')
+//    res.end
 //});
+
+//app.get('/', function(req, res) {
+//    console.log('===========================')
+//    res.send('testing')
+//    res.end
+//});
+//
+//
+app.get('/index', ensureAuthenticated, function(req, res){
+    console.log('========================================')
+    console.log(req.user)
+//    var id = io.sockets.socket.id
+//    io.sockets.emit('current_user', { data: req.user });
+
+    console.log('========')
+    res.render('index');
+    res.write(JSON.stringify(data))
+});
 
 
 io.configure(function (){
@@ -74,7 +91,6 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(id, done) {
-    console.log('finding by id')
     findById(id, function(err, user) {
         done(err, user)
     })
@@ -114,9 +130,7 @@ app.post('/login', function(req, res, next) {
         }
         req.logIn(user, function(err) {
             if (err) { return next(err); }
-//            io.sockets.emit('successLogin', { data: user })
-//            return res.redirect('/' );
-//    res.render('account', { user: req.user });
+            console.log('+============')
             var data = {user: req.user}
             res.write(JSON.stringify(data));
             res.end()
@@ -127,6 +141,7 @@ app.post('/login', function(req, res, next) {
 
 
 function ensureAuthenticated(req, res, next) {
+    console.log('ensuring')
     if (req.isAuthenticated()) { return next(); }
     res.redirect('/')
 }
@@ -143,7 +158,7 @@ io.configure(function (){
     io.set('authorization', function (handshakeData, callback) {
         //console.log(handshakeData.headers.cookie)
         handshakeData.cookie = cookie.parse(handshakeData.headers.cookie)
-        console.log(handshakeData.cookie)
+        //console.log(handshakeData.cookie)
         callback(null, true); // error first callback style
     });
 });
@@ -194,6 +209,8 @@ var users = 'users';
 io.sockets.on('connection', function(socket) {
     //console.log(socket.handshake.address)
 
+    console.log('===============')
+    socket.emit('testingEmit', {data: 'awaaaaaa'})
     console.log(socket.id)
     socket.handshake.id = socket.id
 
@@ -329,6 +346,27 @@ function createOrUpdateUser(arr, userId, objectCount) {
 }
 
 
+var templateEngine = function (template, data) {
+    var vars = template.match(/\{\w+\}/g);
+
+    if (!vars) {
+        return template;
+    }
+
+    var nonVars = template.split(/\{\w+\}/g);
+    var output = '';
+
+    for (var i = 0; i < nonVars.length; i++) {
+        output += nonVars[i];
+
+        if (i < vars.length) {
+            var key = vars[i].replace(/[\{\}]/g, '');
+            output += data[key]
+        }
+    }
+
+    return output;
+};
 
 
 var port = process.env.PORT || 4000;

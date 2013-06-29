@@ -51,6 +51,7 @@ app.controller('AppCtrl', function($scope, socket, $http) {
     }
 
 
+
     $scope.flushDb = function() {
         socket.emit('flushDb')
     }
@@ -114,6 +115,15 @@ app.controller('AppCtrl', function($scope, socket, $http) {
     socket.on('invalidAccount', function(data) {
         console.log(data)
     })
+
+    socket.on('current_user', function(data) {
+        console.log(data)
+    })
+
+    socket.on('testingEmit', function(data) {
+        console.log(data)
+    })
+
 
 })
 

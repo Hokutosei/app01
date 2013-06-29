@@ -19,7 +19,9 @@
     "querystring": "x",
     "xml2js": "x",
     "eyes": "x",
-    "http-proxy": "x"
+    "http-proxy": "x",
+    "connect-flash": "x",
+    "ejs": "x"
   },
   "engines": {
     "node": "0.10.x",
