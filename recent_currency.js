@@ -53,7 +53,7 @@ function main() {
                     if(i == counter) {
                         for(var c = 0; c < data.length; c++) {
                             console.log('******************************************')
-                            for(key in data[c]) {
+                            for(key in data.reverse()[c]) {
                                 console.log(data[c][key]);
 
                             }
