@@ -53,7 +53,8 @@ function main() {
 
     function initializer() {
         client.get(query('weather', 'interval', 'time'), function(err, intervalTime) {
-            console.log('Triggering getdata() in... ' + intervalTime + ' from cluster worker id ' + cluster.worker.id + ' / ' + cpuCount)
+            var processor = cluster.isMaster == true ? 'Master process' : cluster.worker.id
+            console.log('Triggering getdata() in... ' + intervalTime + ' from cluster worker id ' + processor + ' / ' + cpuCount)
             setTimeout(getData, intervalTime)
         })
     }
