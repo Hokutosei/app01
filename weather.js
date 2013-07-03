@@ -24,7 +24,6 @@ if (cluster.isMaster) {
         cluster.fork();
     }
     console.log('Master is working.. ' + cluster)
-    main()
 } else {
 
     console.log('Working ' + cluster.worker.id + ' Running!')
@@ -54,7 +53,7 @@ function main() {
     function initializer() {
         client.get(query('weather', 'interval', 'time'), function(err, intervalTime) {
             var processor = cluster.isMaster == true ? 'Master process' : cluster.worker.id
-            console.log('Triggering getdata() in... ' + intervalTime + ' from cluster worker id ' + processor + ' / ' + cpuCount)
+            console.log('Triggering getdata() in... ' + intervalTime + ' from cluster worker id ' + cluster.worker.id + ' / ' + cpuCount)
             setTimeout(getData, intervalTime)
         })
     }
