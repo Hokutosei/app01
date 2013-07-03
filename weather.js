@@ -24,6 +24,7 @@ if (cluster.isMaster) {
         cluster.fork();
     }
     console.log('Master is working.. ' + cluster)
+    main()
 } else {
 
     console.log('Working ' + cluster.worker.id + ' Running!')
@@ -35,7 +36,8 @@ if (cluster.isMaster) {
 function main() {
     var fetchUrl = [
         { 'weather-akiruno': 'http://api.openweathermap.org/data/2.5/weather?q=Akiruno-shi' },
-        { 'currency-yen-php': 'http://rate-exchange.appspot.com/currency?from=JPY&to=PHP'}
+        { 'currency-yen-php': 'http://rate-exchange.appspot.com/currency?from=JPY&to=PHP'},
+        { 'weather-paranaque' : 'http://api.openweathermap.org/data/2.5/weather?q=Parañaque'}
     ]
 
     var mainKey = 'analytics-info'
@@ -82,6 +84,27 @@ function main() {
                                 })
                             });
                             break;
+                        case 'weather-paranaque':
+                            console.log('weather');
+                            getRequest(fetchUrl[i]['weather-paranaque'], 'weather-paranaque', function(data) {
+                                var weatherData = {
+                                    'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
+                                    'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
+                                    'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
+                                    'weather-main'          : data['weather'][0].main,
+                                    'weather-description'   : data['weather'][0].description,
+                                    'time'                  : new Date()
+                                }
+                                console.log(weatherData)
+                                client.hmset(query(mainKey, getReply, 'weather-paranaque'), weatherData, function(err, hmsetReply) {
+                                    console.log(hmsetReply);
+                                    client.get(query(mainKey, 'id'), function(err, getReply) {
+                                        makePost(getReply, mainKey, 'weather-paranaque');
+                                    })
+                                })
+                            });
+                            break;
+
                         case 'currency-yen-php':
                             console.log('currency');
                             getRequest(fetchUrl[i]['currency-yen-php'], 'currency-yen-php', function(data) {
