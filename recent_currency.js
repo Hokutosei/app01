@@ -36,7 +36,8 @@ function main() {
         var rangeLength = 800
         var mean = getReply - rangeLength, data = [];
         client.hgetall(query(mainKey, getReply - 1, currencyKey), function(err, hgetReply) {
-            console.log(hgetReply['currency']);
+            if(err) { initializeMain(); return };
+//            console.log(hgetReply['currency']);
             var startTime = new Date();
             for(var i = 0, counter = 0; i < rangeLength; i++) {
                 client.hgetall(query(mainKey, mean + i, 'currency-yen-php'), function(err, hgetallReply) {
