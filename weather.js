@@ -167,6 +167,7 @@ function main() {
     function getRequest(url, key, fn) {
         var dataArray = {}
         http.get(url, function(response) {
+            // fix here
             response.on('data', function(chunk) {
                 var data = JSON.parse(chunk)
                 console.log('====================== ' + key)
