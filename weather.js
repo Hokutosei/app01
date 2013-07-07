@@ -20,7 +20,7 @@ if (cluster.isMaster) {
     // Count the machine's CPUs
 
     // Create a worker for each CPU
-    for (var i = 0; i < cpuCount; i += 1) {
+    for (var i = 0; i < 1; i += 1) {
         cluster.fork();
     }
     console.log('Master is working.. ' + cluster)
@@ -167,19 +167,28 @@ function main() {
     function getRequest(url, key, fn) {
         var dataArray = {}
         http.get(url, function(response) {
-            // fix here
-            response.on('data', function(chunk) {
-                var data = JSON.parse(chunk)
-                console.log('====================== ' + key)
-                var counter = 1;
-                for(keys in data) {
-                    dataArray[keys] = data[keys.toString()]
-                    counter++;
-                    if(counter == Object.keys(data).length) {
-                        return fn(dataArray)
+            console.log(response.statusCode)
+            if(response.statusCode == 200) {
+                // fix here
+                response.on('data', function(chunk) {
+                    var data = JSON.parse(chunk)
+                    console.log(data)
+                    console.log('====================== ' + key)
+                    var counter = 1;
+                    for(keys in data) {
+                        dataArray[keys] = data[keys.toString()]
+                        counter++;
+                        if(counter == Object.keys(data).length) {
+                            return fn(dataArray)
+                        }
                     }
-                }
-            })
+                })
+            } else {
+                console.log('Error: ' + key + ' has: ' + response.statusCode + (new Date()).toString().replace('GMT+0900 (JST)', ''))
+            }
+        })
+        .on('error', function(e) {
+            console.log('Got error: ' + e.message)
         })
     }
 

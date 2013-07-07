@@ -34,7 +34,7 @@ function main() {
     mainCounter++;
     client.get(query(mainKey, 'id'), function(err, getReply) {
         var rangeLength = 800
-        var mean = getReply - rangeLength, data = [];
+        var mean = 10 - rangeLength, data = [];
         client.hgetall(query(mainKey, getReply - 1, currencyKey), function(err, hgetReply) {
             // return if error
             if(err) { initializeMain(); return }
@@ -44,7 +44,7 @@ function main() {
                 for(var i = 0, counter = 0; i < rangeLength; i++) {
                     client.hgetall(query(mainKey, mean + i, 'currency-yen-php'), function(err, hgetallReply) {
                         counter++;
-                        if(hgetReply != null && hgetallReply != null && hgetallReply.hasOwnProperty('currency') == true) {
+                        if(hgetallReply != null) {
                             if(hgetallReply['currency'] != hgetReply['currency'] && data.contains(hgetallReply['currency'])) {
                                 var date = hgetallReply['time'].toString().replace('GMT+0900 (JST)', '');
                                 data.push({
@@ -53,6 +53,7 @@ function main() {
                                 })
                             }
                         }
+
                         if(i == counter) {
                             for(var c = 0; c < data.length; c++) {
                                 console.log('******************************************')
