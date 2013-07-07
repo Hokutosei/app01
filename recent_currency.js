@@ -44,7 +44,7 @@ function main() {
                 for(var i = 0, counter = 0; i < rangeLength; i++) {
                     client.hgetall(query(mainKey, mean + i, 'currency-yen-php'), function(err, hgetallReply) {
                         counter++;
-                        if(hgetallReply != null) {
+                        if(hgetReply != null && hgetallReply != null && hgetallReply.hasOwnProperty('currency') == true) {
                             if(hgetallReply['currency'] != hgetReply['currency'] && data.contains(hgetallReply['currency'])) {
                                 var date = hgetallReply['time'].toString().replace('GMT+0900 (JST)', '');
                                 data.push({
