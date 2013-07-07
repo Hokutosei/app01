@@ -34,7 +34,7 @@ function main() {
     mainCounter++;
     client.get(query(mainKey, 'id'), function(err, getReply) {
         var rangeLength = 800
-        var mean = 10 - rangeLength, data = [];
+        var mean = getReply - rangeLength, data = [];
         client.hgetall(query(mainKey, getReply - 1, currencyKey), function(err, hgetReply) {
             // return if error
             if(err) { initializeMain(); return }
