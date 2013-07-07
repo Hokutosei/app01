@@ -39,39 +39,41 @@ function main() {
             // return if error
             if(err) { initializeMain(); return };
 //            console.log(hgetReply['currency']);
-            var startTime = new Date();
-            for(var i = 0, counter = 0; i < rangeLength; i++) {
-                client.hgetall(query(mainKey, mean + i, 'currency-yen-php'), function(err, hgetallReply) {
-                    counter++;
-                    if(hgetallReply != null) {
-                        if(hgetallReply['currency'] != hgetReply['currency'] && data.contains(hgetallReply['currency'])) {
-                            var date = hgetallReply['time'].toString().replace('GMT+0900 (JST)', '');
-                            data.push({
-                                currency    : hgetallReply['currency']
-                                , date        : date
-                            })
-                        }
-                    }
-                    if(i == counter) {
-                        for(var c = 0; c < data.length; c++) {
-                            console.log('******************************************')
-                            for(key in data.reverse()[c]) {
-                                console.log(data[c][key]);
-
-                            }
-                            if(c == data.length - 1) {
-                                var endTime = new Date() - startTime
-                                client.get(query('recent_currency:interval'), function(err, getReply) {
-                                    console.log('******************************************')
-                                    console.log('Took ' + endTime + 'ms - MainCounter: ' + mainCounter +
-                                        ' - current-currency: ' + hgetReply['currency'] + ' ' + formatTime(hgetReply['time']))
-                                    console.log('setting timeout.. ' + getReply);
-                                    setTimeout(initializeMain, getReply)
+            else {
+                var startTime = new Date();
+                for(var i = 0, counter = 0; i < rangeLength; i++) {
+                    client.hgetall(query(mainKey, mean + i, 'currency-yen-php'), function(err, hgetallReply) {
+                        counter++;
+                        if(hgetallReply != null) {
+                            if(hgetallReply['currency'] != hgetReply['currency'] && data.contains(hgetallReply['currency'])) {
+                                var date = hgetallReply['time'].toString().replace('GMT+0900 (JST)', '');
+                                data.push({
+                                    currency    : hgetallReply['currency']
+                                    , date        : date
                                 })
                             }
                         }
-                    }
-                })
+                        if(i == counter) {
+                            for(var c = 0; c < data.length; c++) {
+                                console.log('******************************************')
+                                for(key in data.reverse()[c]) {
+                                    console.log(data[c][key]);
+
+                                }
+                                if(c == data.length - 1) {
+                                    var endTime = new Date() - startTime
+                                    client.get(query('recent_currency:interval'), function(err, getReply) {
+                                        console.log('******************************************')
+                                        console.log('Took ' + endTime + 'ms - MainCounter: ' + mainCounter +
+                                            ' - current-currency: ' + hgetReply['currency'] + ' ' + formatTime(hgetReply['time']))
+                                        console.log('setting timeout.. ' + getReply);
+                                        setTimeout(initializeMain, getReply)
+                                    })
+                                }
+                            }
+                        }
+                    })
+                }
             }
         })
     });
