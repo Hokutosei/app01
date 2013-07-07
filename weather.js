@@ -167,12 +167,10 @@ function main() {
     function getRequest(url, key, fn) {
         var dataArray = {}
         http.get(url, function(response) {
-            console.log(response.statusCode)
             if(response.statusCode == 200) {
                 // fix here
                 response.on('data', function(chunk) {
                     var data = JSON.parse(chunk)
-                    console.log(data)
                     console.log('====================== ' + key)
                     var counter = 1;
                     for(keys in data) {
