@@ -37,7 +37,7 @@ function main() {
         var mean = getReply - rangeLength, data = [];
         client.hgetall(query(mainKey, getReply - 1, currencyKey), function(err, hgetReply) {
             // return if error
-            if(err) { initializeMain(); return };
+            if(err) { initializeMain(); return }
 //            console.log(hgetReply['currency']);
             else {
                 var startTime = new Date();
