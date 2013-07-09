@@ -10,6 +10,16 @@ var client = redis.createClient(6379, globalIp, {no_ready_check: true}, function
     if(err) { console.log('could not connect to redis server') }
 });
 
+//redis-14396.us-east-1-3.2.ec2.garantiadata.com:14396
+var garantiaClient = redis.createClient(14396, 'pub-redis-14396.us-east-1-3.2.ec2.garantiadata.com', function(err, reply) {
+    if(err) { console.log(err) }
+    else { console.log(reply) }
+})
+garantiaClient.auth('jinpol')
+
+
+var hosts = [client, garantiaClient]
+
 
 var cluster = require('cluster');
 var cpuCount = require('os').cpus().length;
@@ -42,11 +52,20 @@ function main() {
     var mainKey = 'analytics-info'
 
     function initializeKey() {
-        client.get(query(mainKey, 'id'), function(err, getReply) {
-            if(getReply == null) {
-                client.set(query(mainKey, 'id'), '0', redis.print)
-            }
-            initializer()
+//        client.get(query(mainKey, 'id'), function(err, getReply) {
+//            if(getReply == null) {
+//                client.set(query(mainKey, 'id'), '0', redis.print)
+//            }
+//            initializer()
+//        })
+        hosts.forEach(function(element) {
+            element.get(query(mainKey, 'id'), function(err, getReply) {
+                if(getReply == null) {
+                    element.set(query(mainKey, 'id'), '0', redis.print)
+                }
+                initializer()
+            })
+
         })
     }
 
@@ -76,12 +95,22 @@ function main() {
                                     'time'                  : new Date()
                                 }
                                 console.log(weatherData)
-                                client.hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, function(err, hmsetReply) {
-                                    console.log(hmsetReply);
-                                    client.get(query(mainKey, 'id'), function(err, getReply) {
-                                        makePost(getReply, mainKey, 'weather-akiruno');
+//                                client.hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, function(err, hmsetReply) {
+//                                    console.log(hmsetReply);
+//                                    client.get(query(mainKey, 'id'), function(err, getReply) {
+//                                        makePost(getReply, mainKey, 'weather-akiruno');
+//                                    })
+//                                })
+                                hosts.forEach(function(host) {
+                                    host.hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, function(err, hmsetReply) {
+                                        console.log(hmsetReply);
+                                        host.get(query(mainKey, 'id'), function(err, getReply) {
+                                            makePost(getReply, mainKey, 'weather-akiruno');
+                                        })
                                     })
+
                                 })
+
                             });
                             break;
                         case 'weather-paranaque':
@@ -96,11 +125,20 @@ function main() {
                                     'time'                  : new Date()
                                 }
                                 console.log(weatherData)
-                                client.hmset(query(mainKey, getReply, 'weather-paranaque'), weatherData, function(err, hmsetReply) {
-                                    console.log(hmsetReply);
-                                    client.get(query(mainKey, 'id'), function(err, getReply) {
-                                        makePost(getReply, mainKey, 'weather-paranaque');
+//                                client.hmset(query(mainKey, getReply, 'weather-paranaque'), weatherData, function(err, hmsetReply) {
+//                                    console.log(hmsetReply);
+//                                    client.get(query(mainKey, 'id'), function(err, getReply) {
+//                                        makePost(getReply, mainKey, 'weather-paranaque');
+//                                    })
+//                                })
+                                hosts.forEach(function(host) {
+                                    host.hmset(query(mainKey, getReply, 'weather-paranaque'), weatherData, function(err, hmsetReply) {
+                                        console.log(hmsetReply);
+                                        host.get(query(mainKey, 'id'), function(err, getReply) {
+                                            makePost(getReply, mainKey, 'weather-paranaque');
+                                        })
                                     })
+
                                 })
                             });
                             break;
@@ -115,18 +153,35 @@ function main() {
                                     'time'      :   new Date()
                                 }
                                 console.log(pesoCurrency)
-                                client.hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, function(err, hmsetReply) {
-                                    client.get(query(mainKey, 'id'), function(err, getReply) {
-                                        makePost(getReply, mainKey, 'currency-yen-php')
+//                                client.hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, function(err, hmsetReply) {
+//                                    client.get(query(mainKey, 'id'), function(err, getReply) {
+//                                        makePost(getReply, mainKey, 'currency-yen-php')
+//                                    })
+//                                })
+//                                client.get(query(mainKey, 'id'), function(err, getReply) {
+//                                    console.log('getreply ' + getReply)
+//                                    var recentId = getReply - 1;
+//                                    client.hget(query(mainKey, recentId, 'currency-yen-php'), 'currency', function(err, hgetReply) {
+//                                        console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
+//                                    })
+//                                })
+                                hosts.forEach(function(host) {
+                                    host.hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, function(err, hmsetReply) {
+                                        host.get(query(mainKey, 'id'), function(err, getReply) {
+                                            makePost(getReply, mainKey, 'currency-yen-php')
+                                        })
                                     })
-                                })
-                                client.get(query(mainKey, 'id'), function(err, getReply) {
-                                    console.log('getreply ' + getReply)
-                                    var recentId = getReply - 1;
-                                    client.hget(query(mainKey, recentId, 'currency-yen-php'), 'currency', function(err, hgetReply) {
-                                        console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
+                                    host.get(query(mainKey, 'id'), function(err, getReply) {
+                                        console.log('getreply ' + getReply)
+                                        var recentId = getReply - 1;
+                                        host.hget(query(mainKey, recentId, 'currency-yen-php'), 'currency', function(err, hgetReply) {
+                                            console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
+                                        })
                                     })
+
                                 })
+
+
                             });
                             break;
                     }
