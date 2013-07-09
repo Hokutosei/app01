@@ -257,7 +257,7 @@ function main() {
         })
         .on('error', function(e) {
             console.log('Got error: ' + e.message)
-        })
+        }).end()
     }
 
     function query() {
