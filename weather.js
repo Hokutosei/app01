@@ -101,12 +101,16 @@ function main() {
 //                                        makePost(getReply, mainKey, 'weather-akiruno');
 //                                    })
 //                                })
+                                var counter = 0;
                                 hosts.forEach(function(host) {
                                     host.hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, function(err, hmsetReply) {
-                                        console.log(hmsetReply);
+                                        counter++;
                                         host.get(query(mainKey, 'id'), function(err, getReply) {
                                             makePost(getReply, mainKey, 'weather-akiruno');
                                         })
+                                        if(counter == hosts.length) {
+                                            console.log(hmsetReply);
+                                        }
                                     })
 
                                 })
@@ -131,12 +135,17 @@ function main() {
 //                                        makePost(getReply, mainKey, 'weather-paranaque');
 //                                    })
 //                                })
+                                var counter = 0;
                                 hosts.forEach(function(host) {
                                     host.hmset(query(mainKey, getReply, 'weather-paranaque'), weatherData, function(err, hmsetReply) {
-                                        console.log(hmsetReply);
+                                        //console.log(hmsetReply);
+                                        counter++;
                                         host.get(query(mainKey, 'id'), function(err, getReply) {
                                             makePost(getReply, mainKey, 'weather-paranaque');
                                         })
+                                        if(counter == hosts.length) {
+                                            console.log(hmsetReply);
+                                        }
                                     })
 
                                 })
@@ -165,6 +174,7 @@ function main() {
 //                                        console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
 //                                    })
 //                                })
+                                var counter = 0;
                                 hosts.forEach(function(host) {
                                     host.hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, function(err, hmsetReply) {
                                         host.get(query(mainKey, 'id'), function(err, getReply) {
@@ -172,10 +182,15 @@ function main() {
                                         })
                                     })
                                     host.get(query(mainKey, 'id'), function(err, getReply) {
-                                        console.log('getreply ' + getReply)
+                                        //console.log('getreply ' + getReply)
                                         var recentId = getReply - 1;
                                         host.hget(query(mainKey, recentId, 'currency-yen-php'), 'currency', function(err, hgetReply) {
+                                            counter++;
                                             console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
+                                            if(counter == hosts.length) {
+                                                console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
+                                            }
+
                                         })
                                     })
 
