@@ -4,6 +4,17 @@ client = redis.createClient(6379, globalIp, {no_ready_check: true}, function(err
     if(err) { console.log('could not connect to redis server') }
 });
 
+var garantiaClient = redis.createClient(14396, 'pub-redis-14396.us-east-1-3.2.ec2.garantiadata.com', function(err, reply) {
+    if(err) { console.log(err) }
+    else { console.log(reply) }
+})
+garantiaClient.auth('jinpol')
+
+
+var hosts = [client, garantiaClient]
+
+
+
 var mainKey = 'analytics-info', currencyKey = 'currency-yen-php';
 var cluster = require('cluster');
 var cpuCount = require('os').cpus().length;
@@ -14,7 +25,7 @@ if (cluster.isMaster) {
     // Count the machine's CPUs
 
     // Create a worker for each CPU
-    for (var i = 0; i < cpuCount; i += 1) {
+    for (var i = 0; i < 1; i += 1) {
         cluster.fork();
     }
     console.log('Master is working.. ' + cluster)
@@ -33,7 +44,7 @@ var mainCounter = 0;
 function main() {
     mainCounter++;
     client.get(query(mainKey, 'id'), function(err, getReply) {
-        var rangeLength = 800
+        var rangeLength = 1000
         var mean = getReply - rangeLength, data = [];
         client.hgetall(query(mainKey, getReply - 1, currencyKey), function(err, hgetReply) {
             // return if error
@@ -42,38 +53,75 @@ function main() {
             else {
                 var startTime = new Date();
                 for(var i = 0, counter = 0; i < rangeLength; i++) {
-                    client.hgetall(query(mainKey, mean + i, 'currency-yen-php'), function(err, hgetallReply) {
-                        counter++;
-                        if(hgetallReply != null) {
-                            if(hgetallReply['currency'] != hgetReply['currency'] && data.contains(hgetallReply['currency'])) {
-                                var date = hgetallReply['time'].toString().replace('GMT+0900 (JST)', '');
-                                data.push({
-                                    currency    : hgetallReply['currency']
-                                    , date        : date
-                                })
-                            }
-                        }
+//                    client.hgetall(query(mainKey, mean + i, 'currency-yen-php'), function(err, hgetallReply) {
+//                        counter++;
+//                        if(hgetallReply != null) {
+//                            if(hgetallReply['currency'] != hgetReply['currency'] && data.contains(hgetallReply['currency'])) {
+//                                var date = hgetallReply['time'].toString().replace('GMT+0900 (JST)', '');
+//                                data.push({
+//                                    currency    : hgetallReply['currency']
+//                                    , date        : date
+//                                })
+//                            }
+//                        }
+//
+//                        if(i == counter) {
+//                            for(var c = 0; c < data.length; c++) {
+//                                console.log('******************************************')
+//                                for(key in data.reverse()[c]) {
+//                                    console.log(data[c][key]);
+//
+//                                }
+//                                if(c == data.length - 1) {
+//                                    var endTime = new Date() - startTime
+//                                    client.get(query('recent_currency:interval'), function(err, getReply) {
+//                                        console.log('******************************************')
+//                                        console.log('Took ' + endTime + 'ms - MainCounter: ' + mainCounter +
+//                                            ' - current-currency: ' + hgetReply['currency'] + ' ' + formatTime(hgetReply['time']))
+//                                        console.log('setting timeout.. ' + getReply);
+//                                        setTimeout(initializeMain, getReply)
+//                                    })
+//                                }
+//                            }
+//                        }
+//                    })
 
-                        if(i == counter) {
-                            for(var c = 0; c < data.length; c++) {
-                                console.log('******************************************')
-                                for(key in data.reverse()[c]) {
-                                    console.log(data[c][key]);
-
-                                }
-                                if(c == data.length - 1) {
-                                    var endTime = new Date() - startTime
-                                    client.get(query('recent_currency:interval'), function(err, getReply) {
-                                        console.log('******************************************')
-                                        console.log('Took ' + endTime + 'ms - MainCounter: ' + mainCounter +
-                                            ' - current-currency: ' + hgetReply['currency'] + ' ' + formatTime(hgetReply['time']))
-                                        console.log('setting timeout.. ' + getReply);
-                                        setTimeout(initializeMain, getReply)
+                    hosts.forEach(function(host) {
+                        host.hgetall(query(mainKey, mean + i, 'currency-yen-php'), function(err, hgetallReply) {
+                            counter++;
+                            if(hgetallReply != null) {
+                                if(hgetallReply['currency'] != hgetReply['currency'] && data.contains(hgetallReply['currency'])) {
+                                    var date = hgetallReply['time'].toString().replace('GMT+0900 (JST)', '');
+                                    data.push({
+                                        currency    : hgetallReply['currency']
+                                        , date        : date
                                     })
                                 }
                             }
-                        }
+
+                            if(i == counter) {
+                                for(var c = 0; c < data.length; c++) {
+                                    console.log('******************************************')
+                                    for(key in data.reverse()[c]) {
+                                        console.log(data[c][key]);
+
+                                    }
+                                    if(c == data.length - 1) {
+                                        var endTime = new Date() - startTime
+                                        client.get(query('recent_currency:interval'), function(err, getReply) {
+                                            console.log('******************************************')
+                                            console.log('Took ' + endTime + 'ms - MainCounter: ' + mainCounter +
+                                                ' - current-currency: ' + hgetReply['currency'] + ' ' + formatTime(hgetReply['time']))
+                                            console.log('setting timeout.. ' + getReply);
+                                            setTimeout(initializeMain, getReply)
+                                        })
+                                    }
+                                }
+                            }
+                        })
+
                     })
+
                 }
             }
         })

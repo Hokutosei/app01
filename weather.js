@@ -186,7 +186,7 @@ function main() {
                                         var recentId = getReply - 1;
                                         host.hget(query(mainKey, recentId, 'currency-yen-php'), 'currency', function(err, hgetReply) {
                                             counter++;
-                                            console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
+                                            //console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
                                             if(counter == hosts.length) {
                                                 console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
                                             }
