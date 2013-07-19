@@ -11,9 +11,9 @@ var garantiaClient = redis.createClient(14396, 'pub-redis-14396.us-east-1-3.2.ec
 garantiaClient.auth('jinpol')
 
 
-var hosts = [client, garantiaClient]
+//var hosts = [client, garantiaClient]
 
-
+var hosts = require('./testing/redisdb.js')
 
 var mainKey = 'analytics-info', currencyKey = 'currency-yen-php';
 var cluster = require('cluster');
