@@ -20,15 +20,11 @@ var hosts = function() {
         var client = redis.createClient(host['ip'], host['address'], function(err, Reply) {
             if(err) { 'Could not connect to ' + host['server'] }
             console.log('Connected to ' + host['server'])
-        })
-        if(host['server'] == 'garantia') {
-            client.auth('jinpol')
-        }
+        });
+        if(host['server'] == 'garantia') { client.auth('jinpol') }
         serverHost.push(client)
     });
-    console.log('===========')
-    console.log(serverHost.length)
     return serverHost
-}
+};
 
-module.exports = hosts()
+module.exports = hosts();
