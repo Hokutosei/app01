@@ -21,7 +21,10 @@
     "eyes": "x",
     "http-proxy": "x",
     "connect-flash": "x",
-    "ejs": "x"
+    "ejs": "x",
+    "jsdom": "x",
+    "request" : "x",
+    "async": ""
   },
   "engines": {
     "node": "0.10.x",
