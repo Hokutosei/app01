@@ -1,6 +1,7 @@
 
 var FacebookClient 		= require("facebook-client").FacebookClient;
 var oauth 						= require('oauth');
+var xmpp 						  = require('node-xmpp');
 var querystring 			= require('querystring');
 
 module.exports = FacebookChat;
@@ -98,3 +99,30 @@ FacebookChat.prototype.getUser = function(access_token, params, callback)
  @param params 		{Object, optional}
  @param callback { Function(err, User)... }
  */
+FacebookChat.prototype.getChatClient = function(access_token, callback)
+{
+    var consumer_key = this.consumer_key;
+    callback = callback || function(){};
+
+    this.getUser(access_token, function(err, user) {
+
+        if(err) return callback(err, null)
+
+        var client = new xmpp.Client({
+            jid: '-' + user.id + '@chat.facebook.com',
+            api_key: consumer_key,
+            access_token: access_token,
+            host: 'chat.facebook.com'
+        });
+
+        return callback(null, client);
+    })
+
+
+}
+
+
+
+
+
+

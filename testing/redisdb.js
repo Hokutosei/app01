@@ -28,3 +28,5 @@ var hosts = function() {
 };
 
 module.exports = hosts();
+
+module.exports = options;

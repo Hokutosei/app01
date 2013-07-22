@@ -24,7 +24,10 @@
     "ejs": "x",
     "jsdom": "x",
     "request" : "x",
-    "async": ""
+    "async": "",
+    "facebook-chat": "",
+    "facebook-client" : "",
+    "node-xmpp" : ""
   },
   "engines": {
     "node": "0.10.x",
