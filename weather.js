@@ -66,7 +66,7 @@ function main() {
         client.get(query('weather', 'interval', 'time'), function(err, intervalTime) {
             var processor = cluster.isMaster == true ? 'Master process' : cluster.worker.id
             console.log('Triggering getdata() in... ' + intervalTime + ' from cluster worker id ' + cluster.worker.id + ' / ' + cpuCount)
-            setTimeout(getData, intervalTime)
+            setTimeout(getData, 3000)
         })
     }
 
@@ -80,7 +80,6 @@ function main() {
                             console.log('weather');
                             getRequest(fetchUrl[i]['weather-akiruno'], 'weather-akiruno', function(data) {
                                 console.log(data)
-                                console.log(hosts)
                                 if(data != null) {
                                     var weatherData = {
                                         'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
@@ -92,18 +91,17 @@ function main() {
                                     }
                                     console.log(weatherData)
                                     var counter = 0;
-                                    hosts.forEach(function(host) {
-                                        host.hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, function(err, hmsetReply) {
+                                    for(var i = 0; i < hosts.length; i++) {
+                                        hosts[i].hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, function(err, hmsetReply) {
                                             counter++;
-                                            host.get(query(mainKey, 'id'), function(err, getReply) {
+                                            client.get(query(mainKey, 'id'), function(err, getReply) {
                                                 makePost(getReply, mainKey, 'weather-akiruno');
                                             })
                                             if(counter == hosts.length) {
                                                 console.log(hmsetReply);
                                             }
                                         })
-
-                                    })
+                                    }
                                 }
                             });
                             break;
@@ -121,18 +119,18 @@ function main() {
                                     }
                                     console.log(weatherData)
                                     var counter = 0;
-                                    hosts.forEach(function(host) {
-                                        host.hmset(query(mainKey, getReply, 'weather-paranaque'), weatherData, function(err, hmsetReply) {
+                                    for(var i = 0; i < hosts.length; i++) {
+                                        hosts[i].hmset(query(mainKey, getReply, 'weather-paranaque'), weatherData, function(err, hmsetReply) {
                                             //console.log(hmsetReply);
                                             counter++;
-                                            host.get(query(mainKey, 'id'), function(err, getReply) {
+                                            client.get(query(mainKey, 'id'), function(err, getReply) {
                                                 makePost(getReply, mainKey, 'weather-paranaque');
                                             })
                                             if(counter == hosts.length) {
                                                 console.log(hmsetReply);
                                             }
                                         })
-                                    })
+                                    }
                                 }
                             });
                             break;
@@ -149,16 +147,16 @@ function main() {
                                     }
                                     console.log(pesoCurrency)
                                     var counter = 0;
-                                    hosts.forEach(function(host) {
-                                        host.hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, function(err, hmsetReply) {
-                                            host.get(query(mainKey, 'id'), function(err, getReply) {
+                                    for(var i = 0; i < hosts.length; i++) {
+                                        hosts[i].hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, function(err, hmsetReply) {
+                                            client.get(query(mainKey, 'id'), function(err, getReply) {
                                                 makePost(getReply, mainKey, 'currency-yen-php')
                                             })
                                         })
-                                        host.get(query(mainKey, 'id'), function(err, getReply) {
+                                        client.get(query(mainKey, 'id'), function(err, getReply) {
                                             //console.log('getreply ' + getReply)
                                             var recentId = getReply - 1;
-                                            host.hget(query(mainKey, recentId, 'currency-yen-php'), 'currency', function(err, hgetReply) {
+                                            client.hget(query(mainKey, recentId, 'currency-yen-php'), 'currency', function(err, hgetReply) {
                                                 counter++;
                                                 //console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
                                                 if(counter == hosts.length) {
@@ -166,7 +164,7 @@ function main() {
                                                 }
                                             })
                                         })
-                                    })
+                                    }
                                 }
                             });
                             break;
@@ -232,6 +230,12 @@ function main() {
             console.log('Got error: ' + e.message)
         }).end()
     }
+
+    for(var i = 0; i < hosts.length; i++) {
+//        hosts[i].set(query('testing', 'jeanepaul'), 100, redis.print)
+        hosts[i].get(query(mainKey, 'id'), redis.print)
+    }
+
 
     function query() {
         var arr = [];
