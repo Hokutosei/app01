@@ -60,15 +60,6 @@ function main() {
             }
             initializer()
         })
-//        hosts.forEach(function(element) {
-//            element.get(query(mainKey, 'id'), function(err, getReply) {
-//                if(getReply == null) {
-//                    element.set(query(mainKey, 'id'), '0', redis.print)
-//                }
-//                initializer()
-//            })
-//
-//        })
     }
 
     function initializer() {
@@ -88,117 +79,95 @@ function main() {
                         case 'weather-akiruno':
                             console.log('weather');
                             getRequest(fetchUrl[i]['weather-akiruno'], 'weather-akiruno', function(data) {
-                                var weatherData = {
-                                    'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
-                                    'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
-                                    'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
-                                    'weather-main'          : data['weather'][0].main,
-                                    'weather-description'   : data['weather'][0].description,
-                                    'time'                  : new Date()
-                                }
-                                console.log(weatherData)
-//                                client.hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, function(err, hmsetReply) {
-//                                    console.log(hmsetReply);
-//                                    client.get(query(mainKey, 'id'), function(err, getReply) {
-//                                        makePost(getReply, mainKey, 'weather-akiruno');
-//                                    })
-//                                })
-                                var counter = 0;
-                                hosts.forEach(function(host) {
-                                    host.hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, function(err, hmsetReply) {
-                                        counter++;
-                                        host.get(query(mainKey, 'id'), function(err, getReply) {
-                                            makePost(getReply, mainKey, 'weather-akiruno');
+                                console.log(data)
+                                console.log(hosts)
+                                if(data != null) {
+                                    var weatherData = {
+                                        'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
+                                        'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
+                                        'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
+                                        'weather-main'          : data['weather'][0].main,
+                                        'weather-description'   : data['weather'][0].description,
+                                        'time'                  : new Date()
+                                    }
+                                    console.log(weatherData)
+                                    var counter = 0;
+                                    hosts.forEach(function(host) {
+                                        host.hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, function(err, hmsetReply) {
+                                            counter++;
+                                            host.get(query(mainKey, 'id'), function(err, getReply) {
+                                                makePost(getReply, mainKey, 'weather-akiruno');
+                                            })
+                                            if(counter == hosts.length) {
+                                                console.log(hmsetReply);
+                                            }
                                         })
-                                        if(counter == hosts.length) {
-                                            console.log(hmsetReply);
-                                        }
+
                                     })
-
-                                })
-
+                                }
                             });
                             break;
                         case 'weather-paranaque':
                             console.log('weather');
                             getRequest(fetchUrl[i]['weather-paranaque'], 'weather-paranaque', function(data) {
-                                var weatherData = {
-                                    'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
-                                    'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
-                                    'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
-                                    'weather-main'          : data['weather'][0].main,
-                                    'weather-description'   : data['weather'][0].description,
-                                    'time'                  : new Date()
-                                }
-                                console.log(weatherData)
-//                                client.hmset(query(mainKey, getReply, 'weather-paranaque'), weatherData, function(err, hmsetReply) {
-//                                    console.log(hmsetReply);
-//                                    client.get(query(mainKey, 'id'), function(err, getReply) {
-//                                        makePost(getReply, mainKey, 'weather-paranaque');
-//                                    })
-//                                })
-                                var counter = 0;
-                                hosts.forEach(function(host) {
-                                    host.hmset(query(mainKey, getReply, 'weather-paranaque'), weatherData, function(err, hmsetReply) {
-                                        //console.log(hmsetReply);
-                                        counter++;
-                                        host.get(query(mainKey, 'id'), function(err, getReply) {
-                                            makePost(getReply, mainKey, 'weather-paranaque');
+                                if(data != null) {
+                                    var weatherData = {
+                                        'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
+                                        'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
+                                        'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
+                                        'weather-main'          : data['weather'][0].main,
+                                        'weather-description'   : data['weather'][0].description,
+                                        'time'                  : new Date()
+                                    }
+                                    console.log(weatherData)
+                                    var counter = 0;
+                                    hosts.forEach(function(host) {
+                                        host.hmset(query(mainKey, getReply, 'weather-paranaque'), weatherData, function(err, hmsetReply) {
+                                            //console.log(hmsetReply);
+                                            counter++;
+                                            host.get(query(mainKey, 'id'), function(err, getReply) {
+                                                makePost(getReply, mainKey, 'weather-paranaque');
+                                            })
+                                            if(counter == hosts.length) {
+                                                console.log(hmsetReply);
+                                            }
                                         })
-                                        if(counter == hosts.length) {
-                                            console.log(hmsetReply);
-                                        }
                                     })
-
-                                })
+                                }
                             });
                             break;
 
                         case 'currency-yen-php':
                             console.log('currency');
                             getRequest(fetchUrl[i]['currency-yen-php'], 'currency-yen-php', function(data) {
-                                var pesoCurrency = {
-                                    'currency'  :   data['rate'],
-                                    'from'      :   data['from'],
-                                    'to'        :   data['to'],
-                                    'time'      :   new Date()
-                                }
-                                console.log(pesoCurrency)
-//                                client.hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, function(err, hmsetReply) {
-//                                    client.get(query(mainKey, 'id'), function(err, getReply) {
-//                                        makePost(getReply, mainKey, 'currency-yen-php')
-//                                    })
-//                                })
-//                                client.get(query(mainKey, 'id'), function(err, getReply) {
-//                                    console.log('getreply ' + getReply)
-//                                    var recentId = getReply - 1;
-//                                    client.hget(query(mainKey, recentId, 'currency-yen-php'), 'currency', function(err, hgetReply) {
-//                                        console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
-//                                    })
-//                                })
-                                var counter = 0;
-                                hosts.forEach(function(host) {
-                                    host.hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, function(err, hmsetReply) {
+                                if(data != null) {
+                                    var pesoCurrency = {
+                                        'currency'  :   data['rate'],
+                                        'from'      :   data['from'],
+                                        'to'        :   data['to'],
+                                        'time'      :   new Date()
+                                    }
+                                    console.log(pesoCurrency)
+                                    var counter = 0;
+                                    hosts.forEach(function(host) {
+                                        host.hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, function(err, hmsetReply) {
+                                            host.get(query(mainKey, 'id'), function(err, getReply) {
+                                                makePost(getReply, mainKey, 'currency-yen-php')
+                                            })
+                                        })
                                         host.get(query(mainKey, 'id'), function(err, getReply) {
-                                            makePost(getReply, mainKey, 'currency-yen-php')
+                                            //console.log('getreply ' + getReply)
+                                            var recentId = getReply - 1;
+                                            host.hget(query(mainKey, recentId, 'currency-yen-php'), 'currency', function(err, hgetReply) {
+                                                counter++;
+                                                //console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
+                                                if(counter == hosts.length) {
+                                                    console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
+                                                }
+                                            })
                                         })
                                     })
-                                    host.get(query(mainKey, 'id'), function(err, getReply) {
-                                        //console.log('getreply ' + getReply)
-                                        var recentId = getReply - 1;
-                                        host.hget(query(mainKey, recentId, 'currency-yen-php'), 'currency', function(err, hgetReply) {
-                                            counter++;
-                                            //console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
-                                            if(counter == hosts.length) {
-                                                console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
-                                            }
-
-                                        })
-                                    })
-
-                                })
-
-
+                                }
                             });
                             break;
                     }
@@ -242,16 +211,18 @@ function main() {
             if(response.statusCode == 200) {
                 // fix here
                 response.on('data', function(chunk) {
-                    var data = JSON.parse(chunk)
-                    console.log('====================== ' + key)
-                    var counter = 1;
-                    for(keys in data) {
-                        dataArray[keys] = data[keys.toString()]
-                        counter++;
-                        if(counter == Object.keys(data).length) {
-                            return fn(dataArray)
+                    if(IsJsonString(chunk)) {
+                        var data = JSON.parse(chunk)
+                        console.log('====================== ' + key)
+                        var counter = 1;
+                        for(keys in data) {
+                            dataArray[keys] = data[keys.toString()]
+                            counter++;
+                            if(counter == Object.keys(data).length) {
+                                return fn(dataArray)
+                            }
                         }
-                    }
+                    } else { return null }
                 })
             } else {
                 console.log('Error: ' + key + ' has: ' + response.statusCode + (new Date()).toString().replace('GMT+0900 (JST)', ''))
@@ -292,4 +263,13 @@ function main() {
         req.write(sendDataString);
         req.end();
     }
+}
+
+function IsJsonString(str) {
+    try {
+        JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
+    return true;
 }
