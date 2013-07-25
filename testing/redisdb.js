@@ -27,6 +27,7 @@ var hosts = function() {
     return serverHost
 };
 
-module.exports = hosts();
-
 module.exports = options;
+
+
+module.exports = hosts();

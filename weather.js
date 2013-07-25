@@ -1,6 +1,7 @@
 var http = require('http'),
     redis = require('redis'),
-    queryString = require('querystring');
+    queryString = require('querystring'),
+    async = require('async');
 
 var loop_delay = 720000, counter = 0, serverStart = new Date();
 
@@ -11,16 +12,11 @@ var client = redis.createClient(6379, globalIp, {no_ready_check: true}, function
 });
 
 //redis-14396.us-east-1-3.2.ec2.garantiadata.com:14396
-var garantiaClient = redis.createClient(14396, 'pub-redis-14396.us-east-1-3.2.ec2.garantiadata.com', function(err, reply) {
-    if(err) { console.log(err) }
-    else { console.log(reply) }
-})
-garantiaClient.auth('jinpol')
 
 
 //var hosts = [client, garantiaClient]
 var hosts = require('./testing/redisdb.js')
-
+console.log(hosts.length)
 
 
 var cluster = require('cluster');
@@ -45,10 +41,12 @@ if (cluster.isMaster) {
 
 
 function main() {
+    initializeKey()
+
     var fetchUrl = [
         { 'weather-akiruno': 'http://api.openweathermap.org/data/2.5/weather?q=Akiruno-shi' },
         { 'currency-yen-php': 'http://rate-exchange.appspot.com/currency?from=JPY&to=PHP'},
-        { 'weather-paranaque' : 'http://api.openweathermap.org/data/2.5/weather?q=Parañaque'}
+        { 'weather-paranaque' : 'http://api.openweathermap.org/data/2.5/weather?q=Paranaque'}
     ]
 
     var mainKey = 'analytics-info'
@@ -58,7 +56,8 @@ function main() {
             if(getReply == null) {
                 client.set(query(mainKey, 'id'), '0', redis.print)
             }
-            initializer()
+            //initializer()
+            getData2()
         })
     }
 
@@ -66,122 +65,217 @@ function main() {
         client.get(query('weather', 'interval', 'time'), function(err, intervalTime) {
             var processor = cluster.isMaster == true ? 'Master process' : cluster.worker.id
             console.log('Triggering getdata() in... ' + intervalTime + ' from cluster worker id ' + cluster.worker.id + ' / ' + cpuCount)
-            setTimeout(getData, intervalTime)
+            setTimeout(getData2, 6000)
         })
     }
 
-    initializeKey()
-    function getData() {
-        client.get(query(mainKey, 'id'), function(err, getReply) {
-            for(var i = 0; i < fetchUrl.length; i++) {
-                for(key in fetchUrl[i]) {
-                    switch (key.toString()) {
-                        case 'weather-akiruno':
-                            console.log('weather');
-                            getRequest(fetchUrl[i]['weather-akiruno'], 'weather-akiruno', function(data) {
-                                console.log(data)
-                                if(data != null) {
-                                    var weatherData = {
-                                        'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
-                                        'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
-                                        'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
-                                        'weather-main'          : data['weather'][0].main,
-                                        'weather-description'   : data['weather'][0].description,
-                                        'time'                  : new Date()
-                                    }
-                                    console.log(weatherData)
-                                    var counter = 0;
-                                    for(var i = 0; i < hosts.length; i++) {
-                                        hosts[i].hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, function(err, hmsetReply) {
-                                            counter++;
-                                            client.get(query(mainKey, 'id'), function(err, getReply) {
-                                                makePost(getReply, mainKey, 'weather-akiruno');
-                                            })
-                                            if(counter == hosts.length) {
-                                                console.log(hmsetReply);
-                                            }
-                                        })
-                                    }
-                                }
-                            });
-                            break;
-                        case 'weather-paranaque':
-                            console.log('weather');
-                            getRequest(fetchUrl[i]['weather-paranaque'], 'weather-paranaque', function(data) {
-                                if(data != null) {
-                                    var weatherData = {
-                                        'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
-                                        'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
-                                        'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
-                                        'weather-main'          : data['weather'][0].main,
-                                        'weather-description'   : data['weather'][0].description,
-                                        'time'                  : new Date()
-                                    }
-                                    console.log(weatherData)
-                                    var counter = 0;
-                                    for(var i = 0; i < hosts.length; i++) {
-                                        hosts[i].hmset(query(mainKey, getReply, 'weather-paranaque'), weatherData, function(err, hmsetReply) {
-                                            //console.log(hmsetReply);
-                                            counter++;
-                                            client.get(query(mainKey, 'id'), function(err, getReply) {
-                                                makePost(getReply, mainKey, 'weather-paranaque');
-                                            })
-                                            if(counter == hosts.length) {
-                                                console.log(hmsetReply);
-                                            }
-                                        })
-                                    }
-                                }
-                            });
-                            break;
 
-                        case 'currency-yen-php':
-                            console.log('currency');
-                            getRequest(fetchUrl[i]['currency-yen-php'], 'currency-yen-php', function(data) {
-                                if(data != null) {
-                                    var pesoCurrency = {
-                                        'currency'  :   data['rate'],
-                                        'from'      :   data['from'],
-                                        'to'        :   data['to'],
-                                        'time'      :   new Date()
-                                    }
-                                    console.log(pesoCurrency)
-                                    var counter = 0;
-                                    for(var i = 0; i < hosts.length; i++) {
-                                        hosts[i].hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, function(err, hmsetReply) {
-                                            client.get(query(mainKey, 'id'), function(err, getReply) {
-                                                makePost(getReply, mainKey, 'currency-yen-php')
-                                            })
-                                        })
-                                        client.get(query(mainKey, 'id'), function(err, getReply) {
-                                            //console.log('getreply ' + getReply)
-                                            var recentId = getReply - 1;
-                                            client.hget(query(mainKey, recentId, 'currency-yen-php'), 'currency', function(err, hgetReply) {
-                                                counter++;
-                                                //console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
-                                                if(counter == hosts.length) {
-                                                    console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
-                                                }
-                                            })
-                                        })
-                                    }
-                                }
-                            });
-                            break;
+    function getData2() {
+        var keyId, dataArr = [];
+        var timeResults = {};
+
+        async.series([
+            function(callback) {
+                var startTime = new Date()
+                client.get(query(mainKey, 'id'), function(err, getReply) {
+                    keyId =  getReply
+                    timeResults['get'] = (new Date() - startTime) + ' ms'
+                    callback()
+                })
+            },
+            function(callback) {
+                fetchUrl.forEach(function(item) {
+                    for(key in item) {
+                        fetchUrlAndConstruct(key, item[key], constructData)
                     }
+                });
 
+                function fetchUrlAndConstruct(keyStr, url, callbackFn) {
+                    var key = keyStr.substring(0, keyStr.indexOf('-'));
+                    callbackFn(key, keyStr, url)
                 }
-                if(i == fetchUrl.length -1 ) {
-                    client.multi()
-                        .lpush(query(mainKey, 'id.list'), getReply)
-                        .incr(query(mainKey, 'id'))
-                        .exec(redis.print)
-                    console.log(serverStart)
-                    initializer()
+                function constructData(keystr, keyItem, url) {
+                    var urlConstructor = {
+                        'weather' : function(url) {
+                            getRequest(url, keyItem, function(data, startTime) {
+                                var weatherData = {
+                                    'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
+                                    'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
+                                    'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
+                                    'weather-main'          :  data['weather'][0].main,
+                                    'weather-description'   :  data['weather'][0].description,
+                                    'time'                  : new Date()
+                                }
+                                console.log(weatherData)
+                                //timeResults.push(keyItem + ' : ' + (new Date() - startTime) + ' ms')
+                                timeResults[keyItem] = (new Date() - startTime) + ' ms'
+                                callback()
+                            })
+                        },
+                        'currency' : function(url) {
+                            getRequest(url, keyItem, function(data, startTime) {
+                                var pesoCurrency = {
+                                    'currency'  :   data['rate'],
+                                    'from'      :   data['from'],
+                                    'to'        :   data['to'],
+                                    'time'      :   new Date()
+                                }
+                                console.log(pesoCurrency)
+                                //timeResults.push(keyItem + ' : ' + (new Date() - startTime) + ' ms')
+                                timeResults[keyItem] = (new Date() - startTime) + ' ms'
+                                callback()
+                            })
+                        }
+                    };
+                    urlConstructor[keystr](url);
+                    log(timeResults)
                 }
             }
+        ], function(err, results) {
+//            log(results)
+            log(timeResults)
         })
+        initializer()
+
+
+
+
+
+//        client.get(query(mainKey, 'id'), function(err, getReply) {
+//            for(var i = 0; i < fetchUrl.length; i++) {
+//                console.log(getReply)
+//
+//
+//
+//                if(i == fetchUrl.length -1 ) {
+//                    client.multi()
+//                        .lpush(query(mainKey, 'id.list'), getReply)
+//                        .incr(query(mainKey, 'id'))
+//                        .exec(redis.print)
+//                    console.log(serverStart)
+//                    initializer()
+//                }
+//            }
+//        })
     }
+
+
+//
+//    function getData() {
+//        client.get(query(mainKey, 'id'), function(err, getReply) {
+//            for(var i = 0; i < fetchUrl.length; i++) {
+//                for(key in fetchUrl[i]) {
+//                    switch (key.toString()) {
+//                        case 'weather-akiruno':
+//                            console.log('weather');
+//                            getRequest(fetchUrl[i]['weather-akiruno'], 'weather-akiruno', function(data) {
+//                                console.log(data)
+//                                if(data != null) {
+//                                    var weatherData = {
+//                                        'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
+//                                        'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
+//                                        'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
+//                                        'weather-main'          : data['weather'][0].main,
+//                                        'weather-description'   : data['weather'][0].description,
+//                                        'time'                  : new Date()
+//                                    }
+//                                    //console.log(weatherData)
+//                                    var counter = 0;
+//                                    for(var i = 0; i < hosts.length; i++) {
+//                                        var host = hosts[i]
+//                                        host.hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, function(err, hmsetReply) {
+//                                            console.log(JSON.stringify(hosts[i]))
+//                                            counter++;
+//                                            client.get(query(mainKey, 'id'), function(err, getReply) {
+//                                                makePost(getReply, mainKey, 'weather-akiruno');
+//                                            })
+//                                            if(counter == hosts.length) {
+//                                                console.log(hmsetReply);
+//                                            }
+//                                        })
+//                                    }
+//                                }
+//                            });
+//                            break;
+//                        case 'weather-paranaque':
+//                            console.log('weather');
+//                            getRequest(fetchUrl[i]['weather-paranaque'], 'weather-paranaque', function(data) {
+//                                if(data != null) {
+//                                    var weatherData = {
+//                                        'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
+//                                        'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
+//                                        'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
+//                                        'weather-main'          : data['weather'][0].main,
+//                                        'weather-description'   : data['weather'][0].description,
+//                                        'time'                  : new Date()
+//                                    }
+//                                    console.log(weatherData)
+//                                    var counter = 0;
+//                                    for(var i = 0; i < hosts.length; i++) {
+//                                        var host = hosts[i]
+//                                        host.hmset(query(mainKey, getReply, 'weather-paranaque'), weatherData, function(err, hmsetReply) {
+//                                            //console.log(hmsetReply);
+//                                            counter++;
+//                                            client.get(query(mainKey, 'id'), function(err, getReply) {
+//                                                makePost(getReply, mainKey, 'weather-paranaque');
+//                                            })
+//                                            if(counter == hosts.length) {
+//                                                console.log(hmsetReply);
+//                                            }
+//                                        })
+//                                    }
+//                                }
+//                            });
+//                            break;
+//
+//                        case 'currency-yen-php':
+//                            console.log('currency');
+//                            getRequest(fetchUrl[i]['currency-yen-php'], 'currency-yen-php', function(data) {
+//                                if(data != null) {
+//                                    var pesoCurrency = {
+//                                        'currency'  :   data['rate'],
+//                                        'from'      :   data['from'],
+//                                        'to'        :   data['to'],
+//                                        'time'      :   new Date()
+//                                    }
+//                                    console.log(pesoCurrency)
+//                                    var counter = 0;
+//                                    for(var i = 0; i < hosts.length; i++) {
+//                                        var host = hosts[i]
+//                                        host.hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, function(err, hmsetReply) {
+//                                            client.get(query(mainKey, 'id'), function(err, getReply) {
+//                                                makePost(getReply, mainKey, 'currency-yen-php')
+//                                            })
+//                                        })
+//                                        client.get(query(mainKey, 'id'), function(err, getReply) {
+//                                            //console.log('getreply ' + getReply)
+//                                            var recentId = getReply - 1;
+//                                            client.hget(query(mainKey, recentId, 'currency-yen-php'), 'currency', function(err, hgetReply) {
+//                                                counter++;
+//                                                //console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
+//                                                if(counter == hosts.length) {
+//                                                    console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
+//                                                }
+//                                            })
+//                                        })
+//                                    }
+//                                }
+//                            });
+//                            break;
+//                    }
+//
+//                }
+//                if(i == fetchUrl.length -1 ) {
+//                    client.multi()
+//                        .lpush(query(mainKey, 'id.list'), getReply)
+//                        .incr(query(mainKey, 'id'))
+//                        .exec(redis.print)
+//                    console.log(serverStart)
+//                    initializer()
+//                }
+//            }
+//        })
+//    }
 //getData();
 //setInterval(function() { getData() }, loop_delay)
 
@@ -205,6 +299,7 @@ function main() {
 
     function getRequest(url, key, fn) {
         var dataArray = {}
+        var startTime = new Date()
         http.get(url, function(response) {
             if(response.statusCode == 200) {
                 // fix here
@@ -217,7 +312,7 @@ function main() {
                             dataArray[keys] = data[keys.toString()]
                             counter++;
                             if(counter == Object.keys(data).length) {
-                                return fn(dataArray)
+                                return fn(dataArray, startTime)
                             }
                         }
                     } else { return null }
@@ -267,6 +362,10 @@ function main() {
         req.write(sendDataString);
         req.end();
     }
+}
+
+function log(str) {
+    console.log(str)
 }
 
 function IsJsonString(str) {
