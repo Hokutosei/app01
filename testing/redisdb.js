@@ -30,4 +30,17 @@ var hosts = function() {
 module.exports = options;
 
 
-module.exports = hosts();
+module.exports = {
+    distribute: function() {
+        var serverHost =[];
+        options.forEach(function(host) {
+            var client = redis.createClient(host['ip'], host['address'], function(err, Reply) {
+                if(err) { 'Could not connect to ' + host['server'] }
+                console.log('Connected to ' + host['server'])
+            });
+            if(host['server'] == 'garantia') { client.auth('jinpol') }
+            serverHost.push(client)
+        });
+        return serverHost
+    }
+}

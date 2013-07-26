@@ -27,7 +27,8 @@
     "async": "",
     "facebook-chat": "",
     "facebook-client" : "",
-    "node-xmpp" : ""
+    "node-xmpp" : "",
+    "prettyjson" : "x"
   },
   "engines": {
     "node": "0.10.x",

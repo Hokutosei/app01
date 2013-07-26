@@ -1,7 +1,9 @@
 var http = require('http'),
     redis = require('redis'),
     queryString = require('querystring'),
-    async = require('async');
+    async = require('async'),
+    prettyjson = require('prettyjson'),
+    mainKey = 'data-analytics';
 
 var loop_delay = 720000, counter = 0, serverStart = new Date();
 
@@ -11,11 +13,9 @@ var client = redis.createClient(6379, globalIp, {no_ready_check: true}, function
     if(err) { console.log('could not connect to redis server') }
 });
 
-//redis-14396.us-east-1-3.2.ec2.garantiadata.com:14396
 
 
-//var hosts = [client, garantiaClient]
-var hosts = require('./testing/redisdb.js')
+var hosts = require('./testing/redisdb.js').distribute()
 console.log(hosts.length)
 
 
@@ -39,6 +39,8 @@ if (cluster.isMaster) {
 
 }
 
+log(client['host'])
+
 
 function main() {
     initializeKey()
@@ -49,14 +51,12 @@ function main() {
         { 'weather-paranaque' : 'http://api.openweathermap.org/data/2.5/weather?q=Paranaque'}
     ]
 
-    var mainKey = 'analytics-info'
-
     function initializeKey() {
         client.get(query(mainKey, 'id'), function(err, getReply) {
+            log(getReply)
             if(getReply == null) {
                 client.set(query(mainKey, 'id'), '0', redis.print)
             }
-            //initializer()
             getData2()
         })
     }
@@ -72,212 +72,111 @@ function main() {
 
     function getData2() {
         var keyId, dataArr = [];
-        var timeResults = {};
+        var timeResults = [];
+        var totalTime = {};
+        var weatherData = {}
+            , pesoCurrency = {}
+            , mainDataForSave = []
 
         async.series([
             function(callback) {
                 var startTime = new Date()
                 client.get(query(mainKey, 'id'), function(err, getReply) {
                     keyId =  getReply
-                    timeResults['get'] = (new Date() - startTime) + ' ms'
-                    callback()
+                    callback(null, keyId)
+                    totalTimeResults((new Date() - startTime) + ' ms', query(mainKey, 'id'))
                 })
             },
             function(callback) {
-                fetchUrl.forEach(function(item) {
-                    for(key in item) {
-                        fetchUrlAndConstruct(key, item[key], constructData)
-                    }
-                });
-
-                function fetchUrlAndConstruct(keyStr, url, callbackFn) {
-                    var key = keyStr.substring(0, keyStr.indexOf('-'));
-                    callbackFn(key, keyStr, url)
-                }
-                function constructData(keystr, keyItem, url) {
-                    var urlConstructor = {
-                        'weather' : function(url) {
-                            getRequest(url, keyItem, function(data, startTime) {
-                                var weatherData = {
-                                    'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
-                                    'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
-                                    'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
-                                    'weather-main'          :  data['weather'][0].main,
-                                    'weather-description'   :  data['weather'][0].description,
-                                    'time'                  : new Date()
-                                }
-                                console.log(weatherData)
-                                //timeResults.push(keyItem + ' : ' + (new Date() - startTime) + ' ms')
-                                timeResults[keyItem] = (new Date() - startTime) + ' ms'
-                                callback()
-                            })
-                        },
-                        'currency' : function(url) {
-                            getRequest(url, keyItem, function(data, startTime) {
-                                var pesoCurrency = {
-                                    'currency'  :   data['rate'],
-                                    'from'      :   data['from'],
-                                    'to'        :   data['to'],
-                                    'time'      :   new Date()
-                                }
-                                console.log(pesoCurrency)
-                                //timeResults.push(keyItem + ' : ' + (new Date() - startTime) + ' ms')
-                                timeResults[keyItem] = (new Date() - startTime) + ' ms'
-                                callback()
-                            })
-                        }
-                    };
-                    urlConstructor[keystr](url);
-                    log(timeResults)
-                }
+                async.forEachSeries(Object.keys(fetchUrl), function(item, upCallback) {
+                    async.forEachSeries(Object.keys(fetchUrl[item]), function(keyItem, keyCallback) {
+                        fetchUrlAndConstruct(Object.keys(fetchUrl[item])[0], fetchUrl[item][keyItem], constructData)
+                    })
+                    upCallback()
+                })
+                callback(null, timeResults)
             }
         ], function(err, results) {
-//            log(results)
-            log(timeResults)
-        })
+            log(results)
+        });
         initializer()
 
+        function fetchUrlAndConstruct(keyStr, url, callbackFn) {
+            var key = keyStr.substring(0, keyStr.indexOf('-'));
+            callbackFn(key, keyStr, url)
+        }
+        function constructData(keystr, keyItem, url) {
+            var urlConstructor = {
+                'weather' : function(url) {
+                    getRequest(url, keyItem, function(data, startTime) {
+                        weatherData[keyItem] = {
+                            'keyItem'               : keyItem,
+                            'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
+                            'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
+                            'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
+                            'weather-main'          :  data['weather'][0].main,
+                            'weather-description'   :  data['weather'][0].description,
+                            'time'                  :  (new Date()).toString()
+                        }
+                        mainDataForSave.push(weatherData[keyItem])
+                        totalTimeResults((new Date() - startTime) + ' ms', keyItem)
 
+                    })
+                },
+                'currency' : function(url) {
+                    getRequest(url, keyItem, function(data, startTime) {
+                        pesoCurrency[keyItem] = {
+                            'keyItem'               : keyItem,
+                            'currency'  :   data['rate'],
+                            'from'      :   data['from'],
+                            'to'        :   data['to'],
+                            'time'      :   (new Date()).toString()
+                        }
+                        mainDataForSave.push(pesoCurrency[keyItem])
+                        totalTimeResults((new Date() - startTime) + ' ms', keyItem)
+                    })
+                }
+            };
+            urlConstructor[keystr](url);
+        }
 
+        function totalTimeResults(data, key) {
+            totalTime[key] = data;
+            if(Object.keys(totalTime).length == fetchUrl.length + 1) {
+                logJson(totalTime)
+                logJson(mainDataForSave)
+                async.series([
+                    function(callback) {
+                        var startTime = new Date();
+                        async.forEachSeries(mainDataForSave, function(elementData, forEachCallback) {
+                            setDataToDistributedRedis(elementData, keyId, key)
+                            forEachCallback()
+                        })
+                        callback(null, 'hmsets: ' + (new Date() - startTime + ' ms'))
+                    },
+                    function(callback) {
+                        var getStartTime = new Date()
+                        client.incr(query(mainKey, 'id'), function(err, getReply) {
+                            callback(null, 'get: ' + (new Date() - getStartTime + ' ms: ') + 'current_id: ' + getReply)
+                        })
+                    }
+                ], function(err, results) {
+                    log(results)
+                })
+            }
+        }
 
-
-//        client.get(query(mainKey, 'id'), function(err, getReply) {
-//            for(var i = 0; i < fetchUrl.length; i++) {
-//                console.log(getReply)
-//
-//
-//
-//                if(i == fetchUrl.length -1 ) {
-//                    client.multi()
-//                        .lpush(query(mainKey, 'id.list'), getReply)
-//                        .incr(query(mainKey, 'id'))
-//                        .exec(redis.print)
-//                    console.log(serverStart)
-//                    initializer()
-//                }
-//            }
-//        })
+        function setDataToDistributedRedis(data, id, key) {
+            hosts.forEach(function(host) {
+                var hmsetStart = new Date()
+                host.hmset(query(mainKey, id, key), data, function(err, hmsetReply) {
+                    // should display or not
+                    //log(hmsetReply)
+                })
+            })
+        }
     }
 
-
-//
-//    function getData() {
-//        client.get(query(mainKey, 'id'), function(err, getReply) {
-//            for(var i = 0; i < fetchUrl.length; i++) {
-//                for(key in fetchUrl[i]) {
-//                    switch (key.toString()) {
-//                        case 'weather-akiruno':
-//                            console.log('weather');
-//                            getRequest(fetchUrl[i]['weather-akiruno'], 'weather-akiruno', function(data) {
-//                                console.log(data)
-//                                if(data != null) {
-//                                    var weatherData = {
-//                                        'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
-//                                        'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
-//                                        'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
-//                                        'weather-main'          : data['weather'][0].main,
-//                                        'weather-description'   : data['weather'][0].description,
-//                                        'time'                  : new Date()
-//                                    }
-//                                    //console.log(weatherData)
-//                                    var counter = 0;
-//                                    for(var i = 0; i < hosts.length; i++) {
-//                                        var host = hosts[i]
-//                                        host.hmset(query(mainKey, getReply, 'weather-akiruno'), weatherData, function(err, hmsetReply) {
-//                                            console.log(JSON.stringify(hosts[i]))
-//                                            counter++;
-//                                            client.get(query(mainKey, 'id'), function(err, getReply) {
-//                                                makePost(getReply, mainKey, 'weather-akiruno');
-//                                            })
-//                                            if(counter == hosts.length) {
-//                                                console.log(hmsetReply);
-//                                            }
-//                                        })
-//                                    }
-//                                }
-//                            });
-//                            break;
-//                        case 'weather-paranaque':
-//                            console.log('weather');
-//                            getRequest(fetchUrl[i]['weather-paranaque'], 'weather-paranaque', function(data) {
-//                                if(data != null) {
-//                                    var weatherData = {
-//                                        'main-temp'             : (data['main'].temp - 273.15).toFixed(2),
-//                                        'main-temp_min'         : (data['main'].temp_min - 273.15).toFixed(2),
-//                                        'main-temp_max'         : (data['main'].temp_max - 273.15).toFixed(2),
-//                                        'weather-main'          : data['weather'][0].main,
-//                                        'weather-description'   : data['weather'][0].description,
-//                                        'time'                  : new Date()
-//                                    }
-//                                    console.log(weatherData)
-//                                    var counter = 0;
-//                                    for(var i = 0; i < hosts.length; i++) {
-//                                        var host = hosts[i]
-//                                        host.hmset(query(mainKey, getReply, 'weather-paranaque'), weatherData, function(err, hmsetReply) {
-//                                            //console.log(hmsetReply);
-//                                            counter++;
-//                                            client.get(query(mainKey, 'id'), function(err, getReply) {
-//                                                makePost(getReply, mainKey, 'weather-paranaque');
-//                                            })
-//                                            if(counter == hosts.length) {
-//                                                console.log(hmsetReply);
-//                                            }
-//                                        })
-//                                    }
-//                                }
-//                            });
-//                            break;
-//
-//                        case 'currency-yen-php':
-//                            console.log('currency');
-//                            getRequest(fetchUrl[i]['currency-yen-php'], 'currency-yen-php', function(data) {
-//                                if(data != null) {
-//                                    var pesoCurrency = {
-//                                        'currency'  :   data['rate'],
-//                                        'from'      :   data['from'],
-//                                        'to'        :   data['to'],
-//                                        'time'      :   new Date()
-//                                    }
-//                                    console.log(pesoCurrency)
-//                                    var counter = 0;
-//                                    for(var i = 0; i < hosts.length; i++) {
-//                                        var host = hosts[i]
-//                                        host.hmset(query(mainKey, getReply, 'currency-yen-php'), pesoCurrency, function(err, hmsetReply) {
-//                                            client.get(query(mainKey, 'id'), function(err, getReply) {
-//                                                makePost(getReply, mainKey, 'currency-yen-php')
-//                                            })
-//                                        })
-//                                        client.get(query(mainKey, 'id'), function(err, getReply) {
-//                                            //console.log('getreply ' + getReply)
-//                                            var recentId = getReply - 1;
-//                                            client.hget(query(mainKey, recentId, 'currency-yen-php'), 'currency', function(err, hgetReply) {
-//                                                counter++;
-//                                                //console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
-//                                                if(counter == hosts.length) {
-//                                                    console.log('Peso Currency current: ' + pesoCurrency['currency'] + ' recent: ' + hgetReply )
-//                                                }
-//                                            })
-//                                        })
-//                                    }
-//                                }
-//                            });
-//                            break;
-//                    }
-//
-//                }
-//                if(i == fetchUrl.length -1 ) {
-//                    client.multi()
-//                        .lpush(query(mainKey, 'id.list'), getReply)
-//                        .incr(query(mainKey, 'id'))
-//                        .exec(redis.print)
-//                    console.log(serverStart)
-//                    initializer()
-//                }
-//            }
-//        })
-//    }
-//getData();
-//setInterval(function() { getData() }, loop_delay)
 
 
 
@@ -306,7 +205,7 @@ function main() {
                 response.on('data', function(chunk) {
                     if(IsJsonString(chunk)) {
                         var data = JSON.parse(chunk)
-                        console.log('====================== ' + key)
+//                        console.log('====================== ' + key)
                         var counter = 1;
                         for(keys in data) {
                             dataArray[keys] = data[keys.toString()]
@@ -366,6 +265,14 @@ function main() {
 
 function log(str) {
     console.log(str)
+}
+
+function logJson(data) {
+    log('============================')
+    log(new Date())
+    log(prettyjson.render(data, {
+        keysColor: 'blue'
+    }))
 }
 
 function IsJsonString(str) {
