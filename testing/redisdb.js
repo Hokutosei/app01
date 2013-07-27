@@ -14,6 +14,25 @@ var options = [
     }
 ];
 
+var slaves = [
+    {
+        server: 'slave-master-3-6379',
+        ip: 6379,
+        address: '10.0.1.3'
+    },
+    {
+        server: 'slave-master-3-6380',
+        ip: 6380,
+        address: '10.0.1.3'
+    },
+    {
+        server: 'slave-master-3-6381',
+        ip: 6381,
+        address: '10.0.1.3'
+    }
+]
+
+
 var hosts = function() {
     var serverHost =[];
     options.forEach(function(host) {
@@ -42,5 +61,18 @@ module.exports = {
             serverHost.push(client)
         });
         return serverHost
+    },
+    slaves: function() {
+        var serverHost =[];
+        slaves.forEach(function(host) {
+            var client = redis.createClient(host['ip'], host['address'], function(err, Reply) {
+                if(err) { 'Could not connect to ' + host['server'] }
+                console.log('Connected to ' + host['server'])
+            });
+            if(host['server'] == 'garantia') { client.auth('jinpol') }
+            serverHost.push(client)
+        });
+        return serverHost
+
     }
 }

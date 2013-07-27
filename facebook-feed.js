@@ -7,13 +7,15 @@ var counter = 0
 var fb = 'facebook'
 
 var async = require('async')
+var jpUtils = require('./utils')
 
 
 var cluster = require('cluster');
 var cpuCount = require('os').cpus().length;
 
-var mainRedisHost = require('./testing/redisdb.js')[0]
-var mainRedisClient = redis.createClient(mainRedisHost['ip'], mainRedisHost['address'])
+var mainRedisHost = require('./testing/redisdb.js').distribute()[0]
+//var mainRedisClient = redis.createClient(mainRedisHost['ip'], mainRedisHost['address'])
+var mainRedisClient = client
 
 var log = function(str) {
     console.log(str)
@@ -68,11 +70,14 @@ function facebook_feed() {
                         var objectLength = Object.keys(obj['data']).length;
                         for(var i = 0; i < objectLength; i++) {
                             var fromUser = obj['data'][i].from.name;
-                            var keyData = ['name', 'story', 'message', 'type', 'created_time'];
+                            var keyData = ['name', 'story', 'message', 'type', 'picture', 'link', 'status_type', 'created_time'];
                             obj['data'][i].from.name = {};
                             for(var d = 0; d < keyData.length; d++) {
                                 if(keyData[d] == 'name') { objectData[i]['name'] = fromUser }
-                                obj['data'][i].from.name[keyData[d]] = objectData[i][keyData[d]]
+                                if(keyData[d] == 'message' && objectData[i]['message'] != undefined) { objectData[i]['message'].toString().replace('\\', '').replace('\n.', '') }
+                                if(objectData[i][keyData[d]] != undefined) {
+                                    obj['data'][i].from.name[keyData[d]] = objectData[i][keyData[d]]
+                                }
                             }
                             dataArray.push(obj['data'][i].from.name)
                             if(i == objectLength - 1) {
@@ -80,7 +85,8 @@ function facebook_feed() {
                                 for(var a = 0; a < dataArray.length; a++) {
                                     console.log('***************************************************************');
                                     console.log(a)
-                                    console.log(dataArray.reverse()[a]);
+                                    //console.log(dataArray.reverse()[a]);
+                                    jpUtils.logJson(dataArray.reverse()[a])
                                 }
                                 counter++;
                                 console.log(counter + '***************************************************************')
@@ -114,7 +120,7 @@ function initializeFeeds() {
     log('initialized')
     client.get('facebook:feed:interval', function(err, getReplyInterval) {
         var interval = getReplyInterval
-        setTimeout(facebook_feed, interval)
+        setTimeout(facebook_feed, 3000)
     })
 }
 
