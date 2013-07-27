@@ -1,5 +1,5 @@
 var redis = require('redis');
-var globalIp = '60.148.89.178' || '10.0.1.2';
+var globalIp = '126.15.225.128' || '10.0.1.2';
 
 var options = [
     {
@@ -33,9 +33,9 @@ var slaves = [
 ]
 
 
-var hosts = function() {
+var hosts = function(hostArr) {
     var serverHost =[];
-    options.forEach(function(host) {
+    hostArr.forEach(function(host) {
         var client = redis.createClient(host['ip'], host['address'], function(err, Reply) {
             if(err) { 'Could not connect to ' + host['server'] }
             console.log('Connected to ' + host['server'])
@@ -74,5 +74,9 @@ module.exports = {
         });
         return serverHost
 
+    },
+    'masterSlaves': function() {
+        var mergedHosts = options.concat(slaves)
+        return hosts(mergedHosts)
     }
 }

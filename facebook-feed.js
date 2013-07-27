@@ -1,6 +1,6 @@
 var https = require('https');
 
-var globalIp = '60.148.89.178' || '10.0.1.2';
+var globalIp = '126.15.225.128' || '10.0.1.2';
 var redis = require('redis');
 var client = redis.createClient(6379, globalIp, {no_ready_check: true});
 var counter = 0
