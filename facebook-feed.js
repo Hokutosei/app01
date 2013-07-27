@@ -120,7 +120,7 @@ function initializeFeeds() {
     log('initialized')
     client.get('facebook:feed:interval', function(err, getReplyInterval) {
         var interval = getReplyInterval
-        setTimeout(facebook_feed, 3000)
+        setTimeout(facebook_feed, interval)
     })
 }
 
