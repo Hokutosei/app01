@@ -3,7 +3,11 @@ var http = require('http'),
     queryString = require('querystring'),
     async = require('async'),
     prettyjson = require('prettyjson'),
-    mainKey = 'data-analytics';
+    mainKey = 'data-analytics',
+    FB = require('fb');
+
+    FB.setAccessToken('CAAEgAJT96bwBANmBzkmIB1FcE40GLfStmMge8OZApZB5B4Sv8vMwkTZBh3AUwBu4hXgOJYnvwE69I5ZAUvGudPod8rhiBHMRdOdT0r7AxPrOLp0VkrHayJattkIZCJh9njsmTBye6ZAdxB4I5OcEufJPO3X5L6jCEZD')
+
 
 var loop_delay = 720000, counter = 0, serverStart = new Date();
 
@@ -282,4 +286,15 @@ function IsJsonString(str) {
         return false;
     }
     return true;
+}
+
+function postToFacebook() {
+    var body = 'testing app';
+    FB.api('me/feed', 'post', { message: body}, function (res) {
+        if(!res || res.error) {
+            console.log(!res ? 'error occurred' : res.error);
+            return;
+        }
+        console.log('Post Id: ' + res.id);
+    });
 }

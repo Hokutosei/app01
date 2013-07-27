@@ -21,6 +21,9 @@ module.exports = {
         var arr = [];
         for(var i = 0; i < arguments.length; i++) { arr.push(arguments[i]) }
         return arguments.length == 1 ? arr[0] : arr.join(' : ');
+    },
+    timeString: function(time) {
+        return time.toString().replace('GMT+0900 (JST)', '')
     }
 
 }

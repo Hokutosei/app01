@@ -74,7 +74,7 @@ function facebook_feed() {
                             obj['data'][i].from.name = {};
                             for(var d = 0; d < keyData.length; d++) {
                                 if(keyData[d] == 'name') { objectData[i]['name'] = fromUser }
-                                if(keyData[d] == 'message' && objectData[i]['message'] != undefined) { objectData[i]['message'].toString().replace('\\', '').replace('\n.', '') }
+                                if(keyData[d] == 'message' && objectData[i]['message'] != undefined) { objectData[i]['message'].toString().replace('\\', '').replace(/\s+/g," ") }
                                 if(objectData[i][keyData[d]] != undefined) {
                                     obj['data'][i].from.name[keyData[d]] = objectData[i][keyData[d]]
                                 }
