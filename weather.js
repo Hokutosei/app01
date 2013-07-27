@@ -147,7 +147,7 @@ function main() {
         function totalTimeResults(data, key) {
             totalTime[key] = data;
             if(Object.keys(totalTime).length == fetchUrl.length + 1) {
-//                logJson(totalTime)
+                logJson(totalTime)
                 logJson(mainDataForSave)
                 async.series([
                     function(callback) {
@@ -170,7 +170,6 @@ function main() {
         }
 
         function setDataToDistributedRedis(data, id, key) {
-            log(key)
             if(key == 'weather-akiruno') {
                 log('akiruno')
             }
