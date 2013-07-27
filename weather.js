@@ -69,7 +69,7 @@ function main() {
         client.get(query('weather', 'interval', 'time'), function(err, intervalTime) {
             var processor = cluster.isMaster == true ? 'Master process' : cluster.worker.id
             console.log('Triggering getdata() in... ' + intervalTime + ' from cluster worker id ' + cluster.worker.id + ' / ' + cpuCount)
-            setTimeout(getData2, intervalTime)
+            setTimeout(getData2, 3000)
         })
     }
 
@@ -147,15 +147,14 @@ function main() {
         function totalTimeResults(data, key) {
             totalTime[key] = data;
             if(Object.keys(totalTime).length == fetchUrl.length + 1) {
-                logJson(totalTime)
+//                logJson(totalTime)
                 logJson(mainDataForSave)
                 async.series([
                     function(callback) {
                         var startTime = new Date();
-                        async.forEachSeries(mainDataForSave, function(elementData, forEachCallback) {
-                            setDataToDistributedRedis(elementData, keyId, key)
-                            forEachCallback()
-                        })
+                        for(var i = 0; i < mainDataForSave.length; i++) {
+                            setDataToDistributedRedis(mainDataForSave[i], keyId, mainDataForSave[i]['keyItem'])
+                        }
                         callback(null, 'hmsets: ' + (new Date() - startTime + ' ms'))
                     },
                     function(callback) {
@@ -171,6 +170,10 @@ function main() {
         }
 
         function setDataToDistributedRedis(data, id, key) {
+            log(key)
+            if(key == 'weather-akiruno') {
+                log('akiruno')
+            }
             hosts.forEach(function(host) {
                 var hmsetStart = new Date()
                 host.hmset(query(mainKey, id, key), data, function(err, hmsetReply) {
