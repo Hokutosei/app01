@@ -162,12 +162,17 @@ function main() {
                         client.incr(query(mainKey, 'id'), function(err, getReply) {
                             callback(null, 'get: ' + (new Date() - getStartTime + ' ms: ') + 'current_id: ' + getReply)
                         })
+                    },
+                    function(callback) {
+                        postToFacebook()
+                        callback(null, 'done fb')
                     }
                 ], function(err, results) {
                     log(results)
                 })
             }
         }
+
 
         function setDataToDistributedRedis(data, id, key) {
             if(key == 'weather-akiruno') {

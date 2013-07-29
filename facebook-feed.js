@@ -13,7 +13,7 @@ var jpUtils = require('./utils')
 var cluster = require('cluster');
 var cpuCount = require('os').cpus().length;
 
-var mainRedisHost = require('./testing/redisdb.js').distribute()[0]
+//var mainRedisHost = require('./testing/redisdb.js').distribute()[0]
 //var mainRedisClient = redis.createClient(mainRedisHost['ip'], mainRedisHost['address'])
 var mainRedisClient = client
 
@@ -29,10 +29,10 @@ if (cluster.isMaster) {
         cluster.fork();
     }
     console.log('Master is working.. ' + cluster)
-    mainRedisClient.get(query('facebook', 'token', 'id'), function(err, getReply) {
+    client.get(query('facebook', 'token', 'id'), function(err, getReply) {
         var counter;
         if(getReply == null) {
-            mainRedisClient.set(query('facebook', 'token', 'id'), 0, function(err, setReply) {
+            client.set(query('facebook', 'token', 'id'), 0, function(err, setReply) {
                 counter = setReply
                 //getAndSetAccessToken(counter)
             })
@@ -51,7 +51,7 @@ function facebook_feed() {
     var id;
     async.series([
         function(callback) {
-            mainRedisClient.get(query(fb, 'token', 'id'), function(err, getReply) {
+            client.get(query(fb, 'token', 'id'), function(err, getReply) {
                 id = getReply
                 callback(null, getReply)
             })
@@ -97,6 +97,7 @@ function facebook_feed() {
                     });
 
                 });
+                client.quit()
             })
         }
     ], function(err, results) {
@@ -120,7 +121,7 @@ function initializeFeeds() {
     log('initialized')
     client.get('facebook:feed:interval', function(err, getReplyInterval) {
         var interval = getReplyInterval
-        setTimeout(facebook_feed, interval)
+        setTimeout(facebook_feed, 3000)
     })
 }
 

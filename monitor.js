@@ -7,6 +7,8 @@ var jpUtils = require('./utils')
 
 hosts.distribute().forEach(function(element){
     var host = element['host']
+    element.debug_mode = true
+
     element.monitor(function (err, res) {
         if(err) { console.log(err) }
         console.log("Entering monitoring mode." + host);
