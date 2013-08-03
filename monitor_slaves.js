@@ -16,5 +16,5 @@ hosts.slaves().forEach(function(element){
     element.on("monitor", function (time, args) {
         console.log(host + ' : ' +time + ": " + util.inspect(args));
     });
-    element.quit()
+//    element.quit()
 })
