@@ -164,7 +164,7 @@ function main() {
                         })
                     },
                     function(callback) {
-                        postToFacebook()
+                        //postToFacebook()
                         callback(null, 'done fb')
                     }
                 ], function(err, results) {
