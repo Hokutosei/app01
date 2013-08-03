@@ -1,5 +1,5 @@
 var redis = require('redis');
-var globalIp = '126.15.225.128' || '10.0.1.2';
+var globalIp = '126.15.98.70' || '10.0.1.2';
 
 var options = [
     {
