@@ -1,5 +1,6 @@
 var hosts = require('./testing/redisdb')
     , myUtils = require('./utils')
+    , log = function(str) { myUtils.log(str) };
 
 
 
@@ -8,7 +9,8 @@ setInterval(function() {
     hosts.masterSlaves().forEach(function(element) {
         element.info(function(err, infoReply) {
             var host = element['host'] == 'pub-redis-14396.us-east-1-3.2.ec2.garantiadata.com' ? 'garantia' : element['host']
-            if(infoReply != undefined) {
+
+            if(element != undefined || host != undefined) {
                 var data = parseInfo(infoReply, host)
                 var keys = myUtils.removeString(data['db0'], ',')
                 var time = myUtils.timeString(new Date())

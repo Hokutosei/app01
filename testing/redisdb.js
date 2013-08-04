@@ -29,7 +29,19 @@ var slaves = [
         server: 'slave-master-3-6381',
         ip: 6381,
         address: '10.0.1.3'
+    },
+    {
+        server: 'slave-master-20-6380',
+        ip: 6380,
+        address: '10.0.1.20'
+    },
+    {
+        server: 'slave-master-21-6380',
+        ip: 6380,
+        address: '10.0.1.21'
     }
+
+
 ]
 
 
