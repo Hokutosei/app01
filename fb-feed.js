@@ -70,7 +70,9 @@ function facebookFeed() {
         log('==============================' + feedCounter);
         logJson(result);
         initializeFeed();
+        return false
     });
+
 }
 
 function initializeFeed() {
@@ -78,7 +80,7 @@ function initializeFeed() {
     client.get('facebook:feed:interval', function(err, getReplyInterval) {
         var interval = getReplyInterval
         log('Setting interval.. ' + interval)
-        setInterval(facebookFeed, interval)
+        setTimeout(facebookFeed, interval)
     })
 }
 
