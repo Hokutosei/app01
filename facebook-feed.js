@@ -47,6 +47,7 @@ if (cluster.isMaster) {
 }
 
 function facebook_feed() {
+    log('starting...')
     var startTime = new Date();
     var id;
     async.series([
@@ -57,6 +58,7 @@ function facebook_feed() {
             })
         },
         function(callback) {
+            log('start sync')
             client.hgetall(query(fb, 'access_token', id - 1), function(err, hgetAllReply) {
                 log(hgetAllReply['access_token'])
                 https.get('https://graph.facebook.com/1638322655/home?access_token=' + hgetAllReply['access_token'], function(response) {
@@ -92,19 +94,17 @@ function facebook_feed() {
                                 console.log(counter + '***************************************************************')
                                 console.log('Took ' + finishTime + ' ms')
                                 callback(null, 'done')
+                                client.quit()
                             }
                         }
                     });
-
                 });
-                client.quit()
             })
         }
     ], function(err, results) {
-        initializeFeeds()
         log(results)
     })
-
+    initializeFeeds()
 
 
 
@@ -119,10 +119,11 @@ function fetchAllData(objectData, i, obj) {
 //initializeFeeds();
 function initializeFeeds() {
     log('initialized')
-    client.get('facebook:feed:interval', function(err, getReplyInterval) {
-        var interval = getReplyInterval
-        setTimeout(facebook_feed, 3000)
-    })
+//    client.get('facebook:feed:interval', function(err, getReplyInterval) {
+//        var interval = getReplyInterval
+//        setTimeout(facebook_feed, 3000)
+//    })
+    setTimeout(facebook_feed, 1000)
 }
 
 
