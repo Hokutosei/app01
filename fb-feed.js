@@ -57,7 +57,8 @@ function facebookFeed() {
                         objectLength = Object.keys(dataObject).length
 
                         for(var i = 0; i < objectLength; i++) {
-                            fbParser(dataObject[i], dataObject[i]['type'], function(err, result) {
+                            var currentData = dataObject.reverse()[i]
+                            fbParser(currentData, currentData['type'], function(err, result) {
 //                                log(result)
                             })
                         }
