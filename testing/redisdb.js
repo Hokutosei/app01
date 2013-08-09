@@ -31,14 +31,14 @@ var slaves = [
         address: '10.0.1.3'
     },
     {
-        server: 'slave-master-20-6380',
-        ip: 6380,
-        address: '10.0.1.20'
+        server: 'slave-master-24-6379',
+        ip: 6379,
+        address: '10.0.1.24'
     },
     {
-        server: 'slave-master-21-6380',
+        server: 'slave-master-24-6380',
         ip: 6380,
-        address: '10.0.1.21'
+        address: '10.0.1.24'
     }
 
 
