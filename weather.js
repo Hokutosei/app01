@@ -53,7 +53,8 @@ function main() {
     var fetchUrl = [
         { 'weather-akiruno': 'http://api.openweathermap.org/data/2.5/weather?q=Akiruno-shi' },
         { 'currency-yen-php': 'http://rate-exchange.appspot.com/currency?from=JPY&to=PHP'},
-        { 'weather-paranaque' : 'http://api.openweathermap.org/data/2.5/weather?q=Paranaque'}
+        { 'weather-paranaque' : 'http://api.openweathermap.org/data/2.5/weather?q=Paranaque'},
+        { 'weather-omiya' : 'http://api.openweathermap.org/data/2.5/weather?q=Omiya'}
     ]
 
     function initializeKey() {
