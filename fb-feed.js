@@ -91,10 +91,19 @@ function fbParser(object, type, callback) {
             fbShowMessage(object, type)
         },
         'video': function(object) {
-            var objectMessage = object['message'] != undefined ? object['message'] : object['description']
-            var message = objectMessage.toString().substring(0,strLimit)
+            var message;
+            if(object['message'] != undefined) {
+                message = object['message']
+            } else if(object['description'] != undefined) {
+                message = object['description']
+            } else if(object['story']) {
+                message = object['story']
+            }
+//
+//            var objectMessage = object['message'] != undefined ? object['message'] : object['description']
+//            var message = objectMessage.toString().substring(0,strLimit)
 
-            var data = { name: object['from']['name'] + ' : ' + type, message: message}
+            var data = { name: object['from']['name'] + ' : ' + type, message: stringLimit(message)}
             logJson(data)
         },
         'swf': function(object) {
@@ -143,5 +152,8 @@ function logJson(jsonData) {
 }
 
 function stringLimit(str) {
-    return str.substring(0,strLimit)
+    if(str == undefined) {
+        return 'str is nil'
+    } else { return str.substring(0,strLimit) }
+
 }
