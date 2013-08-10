@@ -1,6 +1,16 @@
 var redis = require('redis');
 var globalIp = '126.15.98.70' || '10.0.1.2';
 
+var redisMaster = [
+    {
+        server: 'master-27-6379',
+        ip: 6379,
+        address: globalIp
+    }
+
+]
+
+
 var options = [
     {
         server: 'local',
@@ -88,7 +98,7 @@ module.exports = {
 
     },
     'masterSlaves': function() {
-        var mergedHosts = options.concat(slaves)
-        return hosts(mergedHosts)
+        var mergedHosts = options.concat(slaves);
+        return hosts(mergedHosts.concat(redisMaster))
     }
 }
