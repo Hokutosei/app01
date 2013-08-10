@@ -91,18 +91,34 @@ function fbParser(object, type, callback) {
             fbShowMessage(object, type)
         },
         'video': function(object) {
-            var data = { name: object['from']['name'] + ' : ' + type, message: object['message'].toString().substring(0,strLimit)}
+            var objectMessage = object['message'] != undefined ? object['message'] : object['description']
+            var message = objectMessage.toString().substring(0,strLimit)
+
+            var data = { name: object['from']['name'] + ' : ' + type, message: message}
             logJson(data)
         },
         'link': function(object) {
-            var data = { name: object['from']['name'] + ' : ' + type, story: object['story'] }
+            var message;
+            if(object['message'] != undefined) {
+                message = object['message']
+            } else if(object['description'] != undefined) {
+                message = object['description']
+            } else if(object['story']) {
+                message = object['story']
+            }
+
+            var data = { name: object['from']['name'] + ' : ' + type, story: stringLimit(message) }
             logJson(data)
         },
         'status': function(object) {
             fbShowMessage(object, type)
+        },
+        'checkin': function(object) {
+            var data = { name: object['from']['name'] + ' : ' + type }
+            logJson(data)
         }
     };
-    callback(null, fbType[type.toString()](object))
+    callback(null, fbType[type](object))
 }
 
 function fbShowMessage(object, type) {
@@ -117,4 +133,8 @@ function logJson(jsonData) {
     console.log(prettyJson.render(jsonData, {
         keysColor: 'blue'
     }))
+}
+
+function stringLimit(str) {
+    return str.substring(0,strLimit)
 }
