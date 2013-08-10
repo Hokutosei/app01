@@ -1,12 +1,15 @@
 var hosts = require('./testing/redisdb')
     , myUtils = require('./utils')
     , log = function(str) { myUtils.log(str)}
-    , masterslaves = hosts.masterSlaves();
+    , masterslaves = hosts.masterSlaves()
+    , counter = 0;
 
 
 
 setInterval(function() {
 //    myUtils.log(hosts.masterSlaves())
+    log('------------------------------------------------------------------------------------' + counter);
+    counter++;
     masterslaves.forEach(function(element) {
         element.info(function(err, infoReply) {
             var host = element['host'] == 'pub-redis-14396.us-east-1-3.2.ec2.garantiadata.com' ? 'garantia' : element['host']
@@ -24,14 +27,13 @@ setInterval(function() {
                     used_mem: data['used_memory_human'],
                     keys: keys
                 }
-
                 myUtils.log(toLogData)
             }
             else {
                 myUtils.log(host + ':' + element['port'] + ' is undefined in infoReply')
                 return
             }
-            element.quit()
+//            element.quit()
         })
     })
 }, 3000)
