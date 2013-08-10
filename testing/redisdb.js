@@ -1,19 +1,12 @@
 var redis = require('redis');
-var globalIp = '126.15.98.70' || '10.0.1.2';
+// change global ip
+var globalIp = '10.0.1.27' || '10.0.1.2';
 
-var redisMaster = [
+
+
+var redisMasters = [
     {
         server: 'master-27-6379',
-        ip: 6379,
-        address: globalIp
-    }
-
-]
-
-
-var options = [
-    {
-        server: 'local',
         ip: 6379,
         address: globalIp
     },
@@ -25,6 +18,11 @@ var options = [
 ];
 
 var slaves = [
+    {
+        server: 'local',
+        ip: 6379,
+        address: globalIp
+    },
     {
         server: 'slave-master-3-6379',
         ip: 6379,
@@ -68,13 +66,13 @@ var hosts = function(hostArr) {
     return serverHost
 };
 
-module.exports = options;
+module.exports = redisMasters;
 
 
 module.exports = {
     distribute: function() {
         var serverHost =[];
-        options.forEach(function(host) {
+        redisMasters.forEach(function(host) {
             var client = redis.createClient(host['ip'], host['address'], function(err, Reply) {
                 if(err) { 'Could not connect to ' + host['server'] }
                 console.log('Connected to ' + host['server'])
@@ -98,7 +96,7 @@ module.exports = {
 
     },
     'masterSlaves': function() {
-        var mergedHosts = options.concat(slaves);
-        return hosts(mergedHosts.concat(redisMaster))
+        var mergedHosts = redisMasters.concat(slaves);
+        return hosts(mergedHosts)
     }
 }

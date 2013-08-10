@@ -183,6 +183,7 @@ function main() {
             hosts.forEach(function(host) {
                 var hmsetStart = new Date()
                 host.hmset(query(mainKey, id, key), data, function(err, hmsetReply) {
+                    log(hmsetReply)
                     // should display or not
                     //log(hmsetReply)
                 })
