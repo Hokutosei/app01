@@ -11,7 +11,8 @@ var http = require('http'),
 
 var loop_delay = 720000, counter = 0, serverStart = new Date();
 
-var globalIp = '126.15.98.70' || '10.0.1.2';
+//var globalIp = '126.15.98.70' || '10.0.1.2';
+var globalIp = '10.0.1.27'
 var redis = require('redis');
 var client = redis.createClient(6379, globalIp, {no_ready_check: true}, function(err, reply) {
     if(err) { console.log('could not connect to redis server') }
@@ -158,7 +159,7 @@ function main() {
                         callback(null, 'hmsets: ' + (new Date() - startTime + ' ms'))
                     },
                     function(callback) {
-                        var getStartTime = new Date()
+                        var getStartTime = new Date();
                         client.incr(query(mainKey, 'id'), function(err, getReply) {
                             callback(null, 'get: ' + (new Date() - getStartTime + ' ms: ') + 'current_id: ' + getReply)
                         })
