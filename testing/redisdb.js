@@ -98,5 +98,6 @@ module.exports = {
     'masterSlaves': function() {
         var mergedHosts = redisMasters.concat(slaves);
         return hosts(mergedHosts)
-    }
+    },
+    'configServer': redis.createClient(redisMasters[0]['ip'], redisMasters[0]['address'])
 }
