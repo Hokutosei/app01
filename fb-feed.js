@@ -97,6 +97,13 @@ function fbParser(object, type, callback) {
             var data = { name: object['from']['name'] + ' : ' + type, message: message}
             logJson(data)
         },
+        'swf': function(object) {
+            var objectMessage = object['description'] != undefined ? object['description'] : object['name']
+            var message = objectMessage.toString().substring(0,strLimit)
+
+            var data = { name: object['from']['name'] + ' : ' + type, message: message}
+            logJson(data)
+        },
         'link': function(object) {
             var message;
             if(object['message'] != undefined) {
