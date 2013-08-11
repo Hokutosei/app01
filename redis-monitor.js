@@ -36,7 +36,7 @@ setInterval(function() {
 //            element.quit()
         })
     })
-}, 180000)
+},60000)
 
 
 function parseInfo( info, host ) {
