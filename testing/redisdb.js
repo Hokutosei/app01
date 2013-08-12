@@ -1,6 +1,6 @@
 var redis = require('redis');
 // change global ip
-var globalIp = '10.0.1.27' || '10.0.1.2';
+var globalIp = '126.15.104.128' || '10.0.1.2';
 
 
 
