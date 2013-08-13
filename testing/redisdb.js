@@ -24,6 +24,12 @@ var slaves = [
         address: globalIp
     },
     {
+        // old master
+        server: 'slave-master-2-6379',
+        ip: 6379,
+        address: '10.0.1.2'
+    },
+    {
         server: 'slave-master-3-6379',
         ip: 6379,
         address: '10.0.1.3'
