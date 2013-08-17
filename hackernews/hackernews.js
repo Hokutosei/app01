@@ -27,7 +27,7 @@ function initialize() {
                         var fn = css.compile('{id}: {title} \n    {link}', style)
                         log(fn(parseData))
                     }
-                    log('Took ' + (new Date() - startTime) + 'ms ' + 'counter ' + counter +' ----------------------------------------')
+                    log('Took ' + (new Date() - startTime) + 'ms ' + 'counter ' + counter + ' Time: '  + myUtils.timeString(new Date()) + ' ----------------------------------------')
                 } else { log('empty ' + myUtils.timeString(new Date())) }
             });
         })
