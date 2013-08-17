@@ -24,6 +24,14 @@ module.exports = {
     },
     timeString: function(time) {
         return time.toString().replace('GMT+0900 (JST)', '')
+    },
+    isJson: function(str) {
+        try {
+            JSON.parse(str);
+        } catch (e) {
+            return false;
+        }
+        return true;
     }
 
 }

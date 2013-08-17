@@ -29,7 +29,8 @@
     "facebook-client" : "",
     "node-xmpp" : "",
     "prettyjson" : "x",
-    "optimist" : "x"
+    "optimist" : "x",
+    "term-css": "x"
   },
   "engines": {
     "node": "0.10.x",
