@@ -9,11 +9,13 @@ var http = require('http')
     , redisMaster = require('../testing/redisdb').configServer;
 
 
+
 function initialize() {
-    redisMaster.get('hackernews:interval', function(err, getReply) {
+    redisMaster.hgetall(myUtils.query('hackernews', 'conf'), function(err, hgetAllReply) {
         counter++;
         var startTime = new Date();
-        http.get(' http://api.ihackernews.com/page', function(response) {
+        log(hgetAllReply['url'])
+        http.get(hgetAllReply['url'], function(response) {
             var data = '', obj;
             response.on('data', function(chunk){
                 data += chunk;
@@ -22,7 +24,8 @@ function initialize() {
                 if(myUtils.isJson(data)) {
                     var obj = JSON.parse(data);
                     var hackerNewsData = obj['items'];
-                    for(var i = 0; i < Object.keys(hackerNewsData).length; i++) {
+                    var i = Object.keys(hackerNewsData).length
+                    while(i--) {
                         var parseData = { id: i,  title: hackerNewsData[i]['title'], link: hackerNewsData[i]['url'] }
                         var fn = css.compile('{id}: {title} \n    {link}', style)
                         log(fn(parseData))
@@ -30,9 +33,12 @@ function initialize() {
                     log('Took ' + (new Date() - startTime) + 'ms ' + 'counter ' + counter + ' Time: '  + myUtils.timeString(new Date()) + ' ----------------------------------------')
                 } else { log('empty ' + myUtils.timeString(new Date())) }
             });
-        })
-        setTimeout(initialize, getReply)
+        });
+        setTimeout(initialize, hgetAllReply['interval'])
     })
+
+
+
 }
 
 initialize()
