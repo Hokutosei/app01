@@ -19,9 +19,7 @@ function puts(error, stdout, stderr) { sys.puts(stdout)};
         log(virtualMachines[i - 1]);
 
         //log('virsh ' + execution + ' ' + virtualMachines[i - 1])
-        var x = 'virsh ' + execution + ' ' + virtualMachines[i - 1]
-        log(x.toString())
-        exec(x.toString(), puts);
+        exec('virsh ' + execution + ' ' + virtualMachines[i - 1], puts);
 
         if(--i) loopThrough(i);
     }, 3000)
