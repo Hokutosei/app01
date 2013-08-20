@@ -53,7 +53,15 @@ var slaves = [
         server: 'slave-master-24-6380',
         ip: 6380,
         address: '10.0.1.24'
+    },
+    // SOON MASTER
+    {
+        server: 'master-slave-bsd-15-6379',
+        ip: 6379,
+        address: '10.0.1.15'
     }
+
+
 
 
 ]
