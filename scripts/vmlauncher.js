@@ -6,8 +6,20 @@ var sys = require('sys')
 
 var execution = 'start';
 
-var virtualMachines = ['jeanepaul-redis3', 'freebsd-redis1', 'jeanepaul-node1', 'jeanepaul-redis1-vm1'
-                        , 'johnpaul-vm1a', 'funward-git'];
+var virtualMachines = [
+                        //29
+                        'jeanepaul-main-redis'
+                        //26
+                        , 'jeanepaul-node1'
+                        //24
+                        , 'jeanepaul-redis1-vm1'
+                        //27
+                        , 'jeanepaul-redis2'
+                        //28
+                        , 'jeanepaul-redis3'
+                        //25
+                        , 'johnpaul-vm1a'
+                        ];
 
 //var virtualMachines = ['jeanepaul-redis3', 'jeanepaul-node1', 'jeanepaul-redis1-vm1'];
 
