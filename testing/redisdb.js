@@ -6,7 +6,7 @@ var globalIp = '10.0.1.29' || '10.0.1.2';
 
 var redisMasters = [
     {
-        server: 'master-27-6379',
+        server: 'master-29-6379',
         ip: 6379,
         address: globalIp
     },
@@ -53,7 +53,19 @@ var slaves = [
         server: 'slave-master-24-6380',
         ip: 6380,
         address: '10.0.1.24'
+    },
+    {
+        server: 'slave-master-28-6379',
+        ip: 6379,
+        address: '10.0.1.28'
+    },
+    {
+        server: 'slave-master-29-6380',
+        ip: 6380,
+        address: '10.0.1.29'
     }
+
+
     // SOON MASTER
 //    {
 //        server: 'master-slave-bsd-15-6379',
