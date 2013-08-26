@@ -12,7 +12,7 @@ var https = require('https')
 
 var strLimit = 40, feedCounter = 0
 
-var client = redis.createClient(6379, '10.0.1.28');
+var client = redis.createClient(6379, '10.0.1.29');
 
 if (cluster.isMaster) {
     // Create a worker for each CPU

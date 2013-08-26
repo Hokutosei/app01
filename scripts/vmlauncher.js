@@ -19,6 +19,8 @@ var virtualMachines = [
                         , 'jeanepaul-redis3'
                         //25
                         , 'johnpaul-vm1a'
+                        //30
+                        , 'jeanepaul-node2'
                         ];
 
 //var virtualMachines = ['jeanepaul-redis3', 'jeanepaul-node1', 'jeanepaul-redis1-vm1'];
