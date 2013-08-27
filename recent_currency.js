@@ -48,7 +48,9 @@ if (cluster.isMaster) {
 
 
 var rangeCounter = 100;
+var loopCounter = 0
 function mainSecond() {
+    loopCounter++;
     var mainHost = hosts.distribute()[0];
     var garantiaHost = hosts.distribute()[1]
     var currentKey;
@@ -86,6 +88,7 @@ function mainSecond() {
         //log(currentKey)
         log(results)
         log(queryResults)
+        log(loopCounter)
         setTimeout(initializeMain, 4000)
     })
 
