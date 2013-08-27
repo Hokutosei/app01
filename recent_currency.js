@@ -1,8 +1,8 @@
 var redis = require('redis');
-var globalIp = '60.148.89.178' || '10.0.1.2';
-client = redis.createClient(6379, globalIp, {no_ready_check: true}, function(err, reply) {
-    if(err) { console.log('could not connect to redis server') }
-});
+//var globalIp = '60.148.89.178' || '10.0.1.2';
+//client = redis.createClient(6379, globalIp, {no_ready_check: true}, function(err, reply) {
+//    if(err) { console.log('could not connect to redis server') }
+//});
 
 var garantiaClient = redis.createClient(14396, 'pub-redis-14396.us-east-1-3.2.ec2.garantiadata.com', function(err, reply) {
     if(err) { console.log(err) }
@@ -11,11 +11,16 @@ var garantiaClient = redis.createClient(14396, 'pub-redis-14396.us-east-1-3.2.ec
 garantiaClient.auth('jinpol')
 
 
+
+
 //var hosts = [client, garantiaClient]
 
 var hosts = require('./testing/redisdb.js')
+    , myUtils = require('./utils')
+    , async = require('async')
+    , log = function(str) { myUtils.log(str) }
 
-var mainKey = 'analytics-info', currencyKey = 'currency-yen-php';
+var mainKey = 'data-analytics', currencyKey = 'currency-yen-php';
 var cluster = require('cluster');
 var cpuCount = require('os').cpus().length;
 
@@ -34,10 +39,70 @@ if (cluster.isMaster) {
     console.log('Working ' + cluster.worker.id + ' Running!')
     function initializeMain() {
         console.log('initializing from worker ' + cluster.worker.id)
-        main();
+//        main();
+        mainSecond()
     }
     initializeMain()
 }
+
+
+
+var rangeCounter = 100;
+function mainSecond() {
+    var mainHost = hosts.distribute()[0];
+    var garantiaHost = hosts.distribute()[1]
+    var currentKey;
+    var queryResults;
+
+    async.series({
+        getCurrentLength: function(callback) {
+            var queryStart = new Date();
+            mainHost.get(query(mainKey, 'id'), function(err, getReply) {
+                currentKey = getReply;
+                callback(null, (new Date() - queryStart) + ' ms');
+            })
+        }
+        , makeQuery: function(callback) {
+            var queryStart = new Date();
+            async.parallel([
+                function(loopCallback) {
+                    var start = new Date();
+                    loopQuery(mainHost, currentKey, function() {
+                        loopCallback(null, (new Date() - start) + ' ms');
+                    })
+                }
+                , function(loopCallback) {
+                    var start = new Date();
+                    loopQuery(garantiaHost, currentKey, function() {
+                        loopCallback(null, (new Date() - start) + ' ms');
+                    })
+                }
+            ], function(err, results) {
+                queryResults = results
+                callback(null, (new Date() - queryStart) + ' ms');
+            })
+        }
+    }, function(err, results) {
+        //log(currentKey)
+        log(results)
+        log(queryResults)
+        setTimeout(initializeMain, 4000)
+    })
+
+}
+
+
+function loopQuery(host, currentKey, callback) {
+    for(var i = (currentKey - rangeCounter); i < currentKey; i++) {
+        host.hgetall(query(mainKey, currentKey - 1, 'currency-yen-php'), function(err, hgetallReply) {
+            log(query(host['host'], hgetallReply['currency']))
+        });
+        if(i == currentKey - 1) {
+            callback()
+        }
+    }
+}
+
 
 
 var mainCounter = 0;
