@@ -89,6 +89,7 @@ function mainSecond() {
         log(results)
         log(queryResults)
         log(loopCounter)
+        log('Last Loop' + formatTime(new Date()));
         setTimeout(initializeMain, 4000)
     })
 
