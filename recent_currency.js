@@ -47,8 +47,8 @@ if (cluster.isMaster) {
 
 
 
-var rangeCounter = 100;
 var loopCounter = 0
+var rangeCounter = 10;
 function mainSecond() {
     loopCounter++;
     var mainHost = hosts.distribute()[0];
