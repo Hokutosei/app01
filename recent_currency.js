@@ -93,7 +93,7 @@ function mainSecond() {
         log(queryResults)
         log(loopCounter)
         log('Last Loop: ' + formatTime(new Date()));
-        setTimeout(initializeMain, 5000)
+        setTimeout(initializeMain, 15000)
     })
 
 }
@@ -102,7 +102,10 @@ function mainSecond() {
 function loopQuery(host, currentKey, rangeCounter, callback) {
     for(var i = (currentKey - rangeCounter); i < currentKey; i++) {
         host.hgetall(query(mainKey, currentKey - 1, 'currency-yen-php'), function(err, hgetallReply) {
-            log(query(host['host'], hgetallReply['currency']))
+            if(hgetallReply != undefined || hgetallReply != null) {
+                log(query(host['host'], hgetallReply['currency']))
+            }
+
         });
         if(i == currentKey - 1) {
             callback()
