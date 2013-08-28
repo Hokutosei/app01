@@ -25,12 +25,18 @@ var cluster = require('cluster');
 var cpuCount = require('os').cpus().length;
 
 // Code to run if we're in the master process
+
+var mainHost = hosts.distribute()[0];
+var garantiaHost = hosts.distribute()[1]
+
+var loopCounterRange = [10, 20, 30, 40]
+
 if (cluster.isMaster) {
 
     // Count the machine's CPUs
 
     // Create a worker for each CPU
-    for (var i = 0; i < 1; i += 1) {
+    for (var i = 0; i < 2; i += 1) {
         cluster.fork();
     }
     console.log('Master is working.. ' + cluster)
@@ -51,8 +57,6 @@ var loopCounter = 0
 var rangeCounter = 10;
 function mainSecond() {
     loopCounter++;
-    var mainHost = hosts.distribute()[0];
-    var garantiaHost = hosts.distribute()[1]
     var currentKey;
     var queryResults;
 
@@ -69,13 +73,13 @@ function mainSecond() {
             async.parallel([
                 function(loopCallback) {
                     var start = new Date();
-                    loopQuery(mainHost, currentKey, function() {
+                    loopQuery(mainHost, currentKey, loopCounterRange[0], function() {
                         loopCallback(null, (new Date() - start) + ' ms');
                     })
                 }
                 , function(loopCallback) {
                     var start = new Date();
-                    loopQuery(garantiaHost, currentKey, function() {
+                    loopQuery(garantiaHost, currentKey, loopCounterRange[1], function() {
                         loopCallback(null, (new Date() - start) + ' ms');
                     })
                 }
@@ -85,18 +89,17 @@ function mainSecond() {
             })
         }
     }, function(err, results) {
-        //log(currentKey)
         log(results)
         log(queryResults)
         log(loopCounter)
         log('Last Loop: ' + formatTime(new Date()));
-        setTimeout(initializeMain, 15000)
+        setTimeout(initializeMain, 5000)
     })
 
 }
 
 
-function loopQuery(host, currentKey, callback) {
+function loopQuery(host, currentKey, rangeCounter, callback) {
     for(var i = (currentKey - rangeCounter); i < currentKey; i++) {
         host.hgetall(query(mainKey, currentKey - 1, 'currency-yen-php'), function(err, hgetallReply) {
             log(query(host['host'], hgetallReply['currency']))
